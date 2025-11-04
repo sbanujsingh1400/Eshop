@@ -80,3 +80,65 @@ And join the Nx community:
 - [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+
+
+
+
+server {
+    listen 80;
+    server_name 210.79.129.107;
+
+    # Route for your API Gateway
+    location /api/ {
+        proxy_pass http://localhost:8080/; # Forward to your api-gateway container
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Route for your Chatting WebSocket
+    location /ws/ {
+        proxy_pass http://localhost:6006/; # Forward to your chatting-service
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade; # Essential for WebSockets
+        proxy_set_header Connection "Upgrade"; # Essential for WebSockets
+        proxy_set_header Host $host;
+    }
+
+    # Route for your Seller UI (at /seller)
+  # Seller UI
+location ^~ /seller {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    # ✅ Fix static assets (Next.js _next folder)
+    location ~* ^/seller/_next/(.*)$ {
+        proxy_pass http://localhost:3000/seller/_next/$1;
+        proxy_set_header Host $host;
+    }
+
+    # ✅ Fix static media (images, fonts, etc.)
+    location ~* ^/seller/(.*)\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$ {
+        proxy_pass http://localhost:3000/seller/$1.$2;
+        proxy_set_header Host $host;
+    }
+}
+
+    # Route for your User UI (at the root)
+    location / {
+        proxy_pass http://localhost:3001; # Forward to your user-ui container
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
