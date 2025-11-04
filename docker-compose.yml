@@ -12,8 +12,8 @@ services:
       dockerfile: ./Dockerfile.frontend
       args:
         APP_NAME: user-ui
-        NEXT_PUBLIC_SERVER_URI: http://localhost:8080
-        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: ws://localhost:6006
+        NEXT_PUBLIC_SERVER_URI: /api
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: /ws
         NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
     env_file:
       - ./.env       
@@ -43,8 +43,8 @@ services:
       dockerfile: ./Dockerfile.frontend
       args:
         APP_NAME: seller-ui
-        NEXT_PUBLIC_SERVER_URI: http://localhost:8080
-        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: ws://localhost:6006
+        NEXT_PUBLIC_SERVER_URI: /api
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: /ws
         NEXT_PUBLIC_USER_UI_LINK: http://localhost:3001
         NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
     env_file:
