@@ -1,0 +1,33 @@
+# Docker and Docker Compose files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Git and source control history
+.git
+.gitignore
+
+# Nx and dependency artifacts
+node_modules
+.nx
+npm-debug.log*
+
+# Build outputs (will be generated inside the container)
+dist
+build
+.next
+out-tsc
+
+# Local environment and secret files
+.env
+.env.*
+!.env.example
+
+# OS and IDE-specific files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Log files
+*.log

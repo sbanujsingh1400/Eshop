@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Activate Your Account</title>
+  <style>
+    /* Inline / simple styles are best for email compatibility */
+    .email-body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      color: #333;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .email-header {
+      background-color: #00466a;
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+    }
+    .email-content {
+      padding: 20px;
+    }
+    .otp-code {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00466a;
+      margin: 20px 0;
+    }
+    .email-footer {
+      font-size: 0.8rem;
+      color: #777;
+      text-align: center;
+      padding: 10px 20px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-body">
+    <div class="email-container">
+      <div class="email-header">
+        <h1>E-Shop Account Activation</h1>
+      </div>
+      <div class="email-content">
+        <p>Hello <%= name %>,</p>
+        <p>Thank you for registering with E-Shop. To activate your account, please use the following activation code:</p>
+        <div class="otp-code">
+          <%= otp %>
+        </div>
+        <p>Please enter this code on the activation page within the next 5 minutes.</p>
+      </div>
+      <div class="email-footer">
+        <p>If you did not register, you can safely ignore this email.</p>
+        <p>© <%= new Date().getFullYear() %> E-Shop. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

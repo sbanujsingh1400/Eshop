@@ -1,0 +1,60 @@
+# --- Stage 1: Builder ---
+FROM e-shop-base AS builder
+
+
+
+# Name of the app (passed from docker-compose.yml)
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+WORKDIR /app
+
+COPY . .
+
+RUN npx nx build ${APP_NAME}
+
+
+# --- Stage 2: Production ---
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+
+# Create a secure non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001 -G nodejs
+
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+ENV HOSTNAME=0.0.0.0
+ENV NODE_ENV=production
+ARG NEXT_PUBLIC_SERVER_URI
+ARG NEXT_PUBLIC_CHATTING_WEBSOCKET_URI
+ARG NEXT_PUBLIC_USER_UI_LINK
+ARG NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+
+
+ENV NEXT_PUBLIC_SERVER_URI=${NEXT_PUBLIC_SERVER_URI}
+ENV NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${NEXT_PUBLIC_CHATTING_WEBSOCKET_URI}
+ENV NEXT_PUBLIC_USER_UI_LINK=${NEXT_PUBLIC_USER_UI_LINK}
+ENV NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
+
+COPY --from=e-shop-base /app/node_modules ./node_modules
+
+
+
+USER nextjs
+
+# Copy the built "standalone" app output
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/seller-ui/.next/standalone ./
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/seller-ui/.next ./.next
+# COPY --from=builder --chown=nextjs:nodejs /app/apps/${APP_NAME}/public ./public
+# COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/apps/$APP_NAME/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/apps/$APP_NAME/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/$APP_NAME/next.config.js ./next.config.js
+COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+
+# Expose the runtime port (injected via docker-compose)
+EXPOSE ${PORT}
+
+# Start the Next.js production server
+CMD ["npx", "next", "start"]

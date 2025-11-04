@@ -1,0 +1,37 @@
+# --- Stage 1: Builder ---
+FROM e-shop-base AS builder
+
+# The app name will be passed from docker-compose.yml
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+WORKDIR /app
+
+COPY . .
+
+RUN npx nx build ${APP_NAME}
+
+
+# --- Stage 2: Production ---
+FROM node:20-alpine AS runtime
+
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+WORKDIR /app
+
+# Create a non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy ONLY the built app from the builder
+COPY --from=builder /app/dist/apps/${APP_NAME} ./
+COPY --from=e-shop-base /app/node_modules ./node_modules
+
+# Switch to non-root user
+USER appuser
+
+# Expose port (from docker-compose)
+EXPOSE ${PORT}
+
+# Start the app
+CMD ["node", "main.js"]

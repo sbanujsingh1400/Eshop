@@ -1,0 +1,142 @@
+{
+  "name": "@e-shop/order-service",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "dist/apps/order-service",
+          "format": [
+            "cjs"
+          ],
+          "bundle": false,
+          "main": "apps/order-service/src/main.ts",
+          "tsConfig": "apps/order-service/tsconfig.app.json",
+          "assets": [
+            "apps/order-service/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "generateLockfile": true,
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "prune-lockfile": {
+        "build": {
+          "executor": "@nx/esbuild:esbuild",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "defaultConfiguration": "production",
+          "options": {
+            "platform": "node",
+            "outputPath": "dist/apps/order-service",
+            "format": [
+              "cjs"
+            ],
+            "bundle": false,
+            "main": "apps/order-service/src/main.ts",
+            "tsConfig": "apps/order-service/tsconfig.app.json",
+            "assets": [
+              "apps/order-service/src/assets"
+            ],
+            "esbuildOptions": {
+              "sourcemap": true,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          },
+          "configurations": {
+            "development": {},
+            "production": {
+              "generateLockfile": true,
+              "esbuildOptions": {
+                "sourcemap": false,
+                "outExtension": {
+                  ".js": ".js"
+                }
+              }
+            }
+          }
+        },
+        "dependsOn": [
+          "build"
+        ],
+        "cache": true,
+        "executor": "@nx/js:prune-lockfile",
+        "outputs": [
+          "{workspaceRoot}/apps/order-service/dist/package.json",
+          "{workspaceRoot}/apps/order-service/dist/package-lock.json"
+        ],
+        "options": {
+          "buildTarget": "build"
+        }
+      },
+      "copy-workspace-modules": {
+        "dependsOn": [
+          "build"
+        ],
+        "cache": true,
+        "outputs": [
+          "{workspaceRoot}/apps/order-service/dist/workspace_modules"
+        ],
+        "executor": "@nx/js:copy-workspace-modules",
+        "options": {
+          "buildTarget": "build"
+        }
+      },
+      "prune": {
+        "dependsOn": [
+          "prune-lockfile",
+          "copy-workspace-modules"
+        ],
+        "executor": "nx:noop"
+      },
+      "dev": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@e-shop/order-service:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@e-shop/order-service:build:development"
+          },
+          "production": {
+            "buildTarget": "@e-shop/order-service:build:production"
+          }
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

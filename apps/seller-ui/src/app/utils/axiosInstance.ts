@@ -1,0 +1,166 @@
+// import axios from "axios";
+
+
+
+// const axiosInstance = axios.create({
+//     baseURL:process.env.NEXT_PUBLIC_SERVER_URI,
+//     withCredentials:true
+// });
+
+// let isRefreshing = false;
+// let refreshSubscribers:(()=>void)[]=[];
+
+// // handle logout and prevent infinite loops
+// const handleLogout = ()=>{
+//     // console.log('inside handle logout')
+//     if(window.location.pathname !=='/login'){
+//         window.location.href='/login';
+//     }
+// }
+
+// // Handle adding new access token to queued requests
+
+// const subscribeTokenRefresh = (callback:()=>void)=>{
+//     refreshSubscribers.push(callback);
+// }
+
+// // Execute queued req after refresh
+// const onRefreshSuccess = ()=>{
+//     refreshSubscribers.forEach((callback)=>callback());
+//     refreshSubscribers=[];
+// }
+
+// // handle api req
+// axiosInstance.interceptors.request.use((config)=>config,(error)=>Promise.reject(error));
+// // handle expired tokens and re fresh logic
+// axiosInstance.interceptors.response.use((response)=>response,async(error)=>{
+//     const originalRequest = error.config;
+//     const is401=(error?.response?.status===401)
+//     const isRetry=originalRequest?._retry
+//     // prevent infinite retry loop
+//     // console.log(error.response?.status ===401 && !originalRequest._retry,isRefreshing)
+//     if(is401 && !originalRequest._retry){
+//         if(isRefreshing){
+//             return new Promise((resolve)=>{
+//                 subscribeTokenRefresh(()=>resolve(axiosInstance(originalRequest)));
+//             })
+//         }else{
+//             handleLogout()
+//         }
+//     }
+//         originalRequest._retry=true;
+//         isRefreshing=true;
+
+//         try {
+//             // console.log('inside refresh toker',`${process.env.NEXT_PUBLIC_SERVER_URI}/refresh-token`)
+//         const res=  await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/refresh-token`,{},{withCredentials:true});
+//         //  console.log(res.data); 
+//         //  console.log('inside refresh toker')
+//         isRefreshing=false;
+//         //   console.log('refreshtoken is called')
+//           onRefreshSuccess();
+
+//           if(!isRetry)     return axiosInstance(originalRequest);
+
+//         } catch (error) {
+//             console.log(error)
+//             isRefreshing=false;
+//             refreshSubscribers=[];
+//             handleLogout();
+//             return Promise.reject(error);
+//         }
+
+//     }
+    
+
+// );
+
+// export default axiosInstance;
+import axios from "axios";
+
+const axiosInstance = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_SERVER_URI,
+    withCredentials: true
+});
+
+let isRefreshing = false;
+let refreshSubscribers: (() => void)[] = [];
+
+// handle logout and prevent infinite loops
+const handleLogout = () => {
+    // console.log('inside handle logout')
+    if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+    }
+}
+
+// Handle adding new access token to queued requests
+const subscribeTokenRefresh = (callback: () => void) => {
+    refreshSubscribers.push(callback);
+}
+
+// Execute queued req after refresh
+const onRefreshSuccess = () => {
+    refreshSubscribers.forEach((callback) => callback());
+    refreshSubscribers = [];
+}
+
+// handle api req
+axiosInstance.interceptors.request.use((config) => config, (error) => Promise.reject(error));
+
+// handle expired tokens and re fresh logic
+axiosInstance.interceptors.response.use(
+    (response) => response, // Directly return successful responses
+    async (error) => {
+        const originalRequest = error.config;
+        const is401 = error?.response?.status === 401;
+
+        // Check if it's a 401 error and not already a retry
+        if (is401 && !originalRequest._retry) {
+            
+            // Mark this request as retried
+            originalRequest._retry = true;
+
+            if (isRefreshing) {
+                // If a refresh is already in progress, queue this request
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh(() => resolve(axiosInstance(originalRequest)));
+                });
+            }
+
+            // This is the first 401, start the token refresh
+            isRefreshing = true;
+
+            try {
+                // console.log('Attempting to refresh token...');
+                await axios.post(
+                    `${process.env.NEXT_PUBLIC_SERVER_URI}/refresh-token`,
+                    {},
+                    { withCredentials: true }
+                );
+                // console.log('Token refresh successful');
+
+                isRefreshing = false;
+                onRefreshSuccess();
+
+                // Retry the original request that failed
+                return axiosInstance(originalRequest);
+
+            } catch (refreshError) {
+                // The refresh attempt failed. Log the user out.
+                console.error("Token refresh failed:", refreshError);
+                isRefreshing = false;
+                refreshSubscribers = [];
+                handleLogout();
+
+                // Reject the promise of the original request
+                return Promise.reject(refreshError);
+            }
+        }
+
+        // For all other errors (non-401) or if it's already a retry, just reject
+        return Promise.reject(error);
+    }
+);
+
+export default axiosInstance;

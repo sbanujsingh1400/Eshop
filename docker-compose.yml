@@ -1,0 +1,178 @@
+version: '3.8'
+
+networks:
+  e-shop-network:
+    driver: bridge
+
+services:
+  user-ui:
+    container_name: e-shop-user-ui
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+      args:
+        APP_NAME: user-ui
+        NEXT_PUBLIC_SERVER_URI: http://localhost:8080
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: ws://localhost:6006
+        NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
+    env_file:
+      - ./.env       
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+  
+  base:
+    container_name: e-shop-base
+    build:
+      context: .
+      dockerfile: ./Dockerfile.base
+    image: e-shop-base
+    networks:
+      - e-shop-network
+
+  seller-ui:
+    container_name: e-shop-seller-ui
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+      args:
+        APP_NAME: seller-ui
+        NEXT_PUBLIC_SERVER_URI: http://localhost:8080
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: ws://localhost:6006
+        NEXT_PUBLIC_USER_UI_LINK: http://localhost:3001
+        NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
+    env_file:
+      - ./.env   
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+  
+  api-gateway:
+    container_name: e-shop-api-gateway
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: api-gateway
+    env_file:
+      - ./.env    
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=production
+      
+    networks:
+      - e-shop-network
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - chatting-service
+      # - logger-service
+    restart: unless-stopped
+
+  auth-service:
+    container_name: e-shop-auth-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: auth-service
+    env_file:
+      - ./.env      
+    environment:
+      - PORT=6001
+      - NODE_ENV=production
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+
+  product-service:
+    container_name: e-shop-product-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: product-service
+    env_file:
+      - ./.env      
+    environment:
+      - PORT=6002
+      - NODE_ENV=production
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+
+  order-service:
+    container_name: e-shop-order-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: order-service
+    env_file:
+      - ./.env      
+    environment:
+      - PORT=6004
+      - NODE_ENV=production
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+
+  chatting-service:
+    container_name: e-shop-chatting-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: chatting-service
+    env_file:
+      - ./.env      
+    environment:
+      - PORT=6006
+      - NODE_ENV=production
+    ports:
+      - "6006:6006"  
+    networks:
+      - e-shop-network
+    restart: unless-stopped
+
+  # logger-service:
+  #   container_name: e-shop-logger-service
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile.backend
+  #     args:
+  #       APP_NAME: logger-service
+  #   environment:
+  #     - PORT=6008
+  #     - KAFKA_API_KEY=${KAFKA_API_KEY}
+  #     - KAFKA_API_SECRET=${KAFKA_API_SECRET}
+  #   networks:
+  #     - e-shop-network
+  #   restart: unless-stopped
+
+  kafka-service:
+    container_name: e-shop-kafka-service
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: kafka-service
+    env_file:
+      - ./.env      
+    networks:
+      - e-shop-network
+    restart: unless-stopped

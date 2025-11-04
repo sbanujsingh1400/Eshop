@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation - Eshop</title>
+  <style>
+    /* Google Font for modern typography */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fa;
+      font-family: 'Poppins', sans-serif;
+      color: #333333;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .header {
+      background-color: #2563eb;
+      color: #ffffff;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .content {
+      padding: 30px;
+    }
+    .content h2 {
+      font-size: 22px;
+      color: #111827;
+      margin-top: 0;
+    }
+    .content p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #4b5563;
+    }
+    .order-summary {
+      margin-top: 30px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+    }
+    .order-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .order-summary-table th, .order-summary-table td {
+      padding: 12px 0;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .order-summary-table th {
+      font-size: 14px;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .order-summary-table .item-title {
+      font-weight: 600;
+      color: #111827;
+    }
+    .total-row {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .total-row td {
+      border-bottom: none;
+      padding-top: 20px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #2563eb;
+      color: #ffffff !important;
+      padding: 14px 28px;
+      margin-top: 30px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: background-color 0.2s ease;
+    }
+    .cta-button:hover {
+      background-color: #1d4ed8;
+    }
+    .support-text {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .support-text a {
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .footer {
+      padding: 30px;
+      font-size: 12px;
+      text-align: center;
+      color: #9ca3af;
+      background-color: #f9fafb;
+    }
+
+    /* Responsive styles */
+    @media screen and (max-width: 600px) {
+      .email-container {
+        width: 100% !important;
+        margin: 0;
+        border-radius: 0;
+      }
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="email-container">
+    
+    <div class="header">
+      <h1>⭐ Order Confirmed!</h1>
+    </div>
+
+    <div class="content">
+      <h2>Hi <%= name %>,</h2>
+      <p>
+        Thank you for your purchase! We've received your order and our team will start processing it shortly. You can find a summary of your order below.
+      </p>
+
+      <div class="order-summary">
+        <table class="order-summary-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th style="text-align: center;">Qty</th>
+              <th style="text-align: right;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% cart.forEach(item => { %>
+              <tr>
+                <td>
+                  <span class="item-title"><%= item.title %></span>
+                </td>
+                <td style="text-align: center;"><%= item.quantity %></td>
+                <td style="text-align: right;">$<%= item.sale_price.toFixed(2) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="2">Total</td>
+              <td style="text-align: right;">$<%= totalAmount.toFixed(2) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="<%= trackingUrl %>" class="cta-button">Track Your Order</a>
+      </div>
+
+      <p class="support-text">
+        If you have any questions, feel free to reply to this email or contact our support team at <a href="mailto:support@eshop.com">support@eshop.com</a>.
+      </p>
+    </div>
+
+    <div class="footer">
+      &copy; <%= new Date().getFullYear() %> Eshop. All rights reserved.
+    </div>
+
+  </div>
+
+</body>
+</html>

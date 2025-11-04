@@ -1,0 +1,42 @@
+import express,{Router} from 'express';
+import { addUserAddress, createShop, createStripeConnectLink, deleteUserAddress, getAdmin, getSeller, getUser, getUserAddresses, googleAuth, googleCallback, loginAdmin, loginSeller, loginUser, logoutSeller, logoutUser, refreshToken, registerSeller, resetUserPassword, updateSellerDetails, updateSellerProfilePic, updateShopCover, updateShopDetails, updateUserDetails, updateUserPassword, updateUserProfilePic, userForgetPassword, userRegistration, verifySeller, verifyUser, verifyUserForgotPassword } from '../controller/auth.controller';
+import isAuthenticated from '../../../../packages/middleware/isAuthenticated';
+import { isAdmin, isSeller } from '../../../../packages/middleware/authorizeRoles';
+
+const router :Router = express.Router();
+
+router.post('/user-registration',userRegistration);
+router.post('/verify-user',verifyUser);
+router.post('/login-user',loginUser);
+router.post('/refresh-token',refreshToken);
+router.get('/logged-in-user',isAuthenticated,getUser);
+router.post('/forgot-password-user',userForgetPassword);
+router.post('/reset-password-user',resetUserPassword);
+router.post('/verify-forgot-password-user',verifyUserForgotPassword);
+router.post('/seller-registration',registerSeller);
+router.post('/verify-seller',verifySeller);
+router.post('/create-shop',createShop);
+router.post('/create-stripe-link',createStripeConnectLink);
+router.post('/login-seller',loginSeller);
+router.get('/logged-in-seller',isAuthenticated,isSeller,getSeller);
+router.get('/logged-in-admin',isAuthenticated,isAdmin,getAdmin);
+router.get("/shipping-addresses", isAuthenticated, getUserAddresses);
+router.post("/add-address", isAuthenticated, addUserAddress);
+router.delete("/delete-address/:addressId", isAuthenticated, deleteUserAddress);
+router.post("/change-password", isAuthenticated, updateUserPassword);
+router.post('/login-admin',loginAdmin);
+router.get('/logout-user',isAuthenticated,logoutUser);
+router.get('/logout-seller',isAuthenticated,logoutSeller);
+router.put( '/update-user-profile-image',isAuthenticated,updateUserProfilePic);
+router.get('/google',googleAuth);
+router.post('/update-user',isAuthenticated,updateUserDetails);
+router.put( '/update-seller-profile-image',isAuthenticated,isSeller,updateSellerProfilePic);
+router.put( '/update-shop-cover-image/:shopId',isAuthenticated,isSeller,updateShopCover);
+router.put('/seller-profile-update',isAuthenticated,isSeller,updateSellerDetails);
+router.put('/shop-details-update',isAuthenticated,isSeller,updateShopDetails);
+
+
+router.get('/google/callback',googleCallback);
+  
+
+export default router;

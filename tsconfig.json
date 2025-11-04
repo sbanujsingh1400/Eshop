@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/auth-service"
+    },
+    {
+      "path": "./apps/api-gateway"
+    },
+    {
+      "path": "./apps/user-ui"
+    },
+    {
+      "path": "./apps/seller-ui"
+    },
+    {
+      "path": "./apps/product-service"
+    },
+    {
+      "path": "./apps/kafka-service"
+    },
+    {
+      "path": "./apps/order-service"
+    },
+    {
+      "path": "./apps/chatting-service"
+    }
+  ]
+}
