@@ -51,7 +51,7 @@ const server = app.listen(port, host, () => {
   console.log(`swagger Docs available at http:/localhost:${port}/docs`)
   
 });
-
+console.log('auth service is called');
 
 server.on('error',(error)=>{
 console.log("Server Error :  "+error)
