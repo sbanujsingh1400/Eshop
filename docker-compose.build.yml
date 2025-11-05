@@ -5,10 +5,25 @@ networks:
     driver: bridge
 
 services:
-  
+  base:
+    container_name: e-shop-base
+    build:
+      context: .
+      dockerfile: ./Dockerfile.base
+    image: e-shop-base
+    networks:
+      - e-shop-network
+
   user-ui:
     container_name: e-shop-user-ui
-    image: ghcr.io/sbanujsingh1400/eshop-user-ui:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+      args:
+        APP_NAME: user-ui
+        NEXT_PUBLIC_SERVER_URI: /api
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: /ws
+        NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
     env_file:
       - ./.env       
     ports:
@@ -24,7 +39,15 @@ services:
 
   seller-ui:
     container_name: e-shop-seller-ui
-    image: ghcr.io/sbanujsingh1400/eshop-seller-ui:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.frontend
+      args:
+        APP_NAME: seller-ui
+        NEXT_PUBLIC_SERVER_URI: /api
+        NEXT_PUBLIC_CHATTING_WEBSOCKET_URI: /ws
+        NEXT_PUBLIC_USER_UI_LINK: http://localhost:3001
+        NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
     env_file:
       - ./.env   
     ports:
@@ -38,7 +61,11 @@ services:
   
   api-gateway:
     container_name: e-shop-api-gateway
-    image: ghcr.io/sbanujsingh1400/eshop-api-gateway:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: api-gateway
     env_file:
       - ./.env    
     ports:
@@ -59,7 +86,11 @@ services:
 
   auth-service:
     container_name: e-shop-auth-service
-    image: ghcr.io/sbanujsingh1400/eshop-auth-service:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: auth-service
     env_file:
       - ./.env      
     environment:
@@ -71,7 +102,11 @@ services:
 
   product-service:
     container_name: e-shop-product-service
-    image: ghcr.io/sbanujsingh1400/eshop-product-service:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: product-service
     env_file:
       - ./.env      
     environment:
@@ -83,7 +118,11 @@ services:
 
   order-service:
     container_name: e-shop-order-service
-    image: ghcr.io/sbanujsingh1400/eshop-order-service:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: order-service
     env_file:
       - ./.env      
     environment:
@@ -95,7 +134,11 @@ services:
 
   chatting-service:
     container_name: e-shop-chatting-service
-    image: ghcr.io/sbanujsingh1400/eshop-chatting-service:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: chatting-service
     env_file:
       - ./.env      
     environment:
@@ -107,9 +150,28 @@ services:
       - e-shop-network
     restart: unless-stopped
 
+  # logger-service:
+  #   container_name: e-shop-logger-service
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile.backend
+  #     args:
+  #       APP_NAME: logger-service
+  #   environment:
+  #     - PORT=6008
+  #     - KAFKA_API_KEY=${KAFKA_API_KEY}
+  #     - KAFKA_API_SECRET=${KAFKA_API_SECRET}
+  #   networks:
+  #     - e-shop-network
+  #   restart: unless-stopped
+
   kafka-service:
     container_name: e-shop-kafka-service
-    image: ghcr.io/sbanujsingh1400/eshop-kafka-service:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile.backend
+      args:
+        APP_NAME: kafka-service
     env_file:
       - ./.env      
     networks:

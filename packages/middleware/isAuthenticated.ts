@@ -6,9 +6,9 @@ import jwt from 'jsonwebtoken'
 
     try {
         const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
-        // console.log(req.cookies["access_token"]) 
+        console.log(req.cookies["access_token"]) 
         if(!token){
-            // console.log(token) 
+            console.log(token) 
             return res.status(401).json({message:"Unauthorized! token is missing"});}
         const decoded =await jwt.verify(token,process.env.JWT_SECRET!)as {id:string,role:"user"|"seller" | "admin"};
         

@@ -877,8 +877,8 @@ export const logoutUser = async (req: any, res: Response, next: NextFunction) =>
 
 try {
 
-  res.cookie("access_token","");
-  res.cookie("refresh_token","");
+  setCookie(res,"access_token","");
+  setCookie(res,"refresh_token","");
   return res.status(200).json({
     success:true,
     message:"Logged out user successfully"
@@ -896,8 +896,8 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
 
   try {
   
-    res.cookie("seller-access_token","");
-    res.cookie("seller-refresh_token","");
+    setCookie(res,"seller-access_token","");
+    setCookie(res,"seller-refresh_token","");
     return res.status(200).json({
       success:true,
       message:"Logged out seller successfully"
@@ -1013,7 +1013,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
     setCookie(res, "access_token", appJwt);
   
       // 5. Set the JWT in an HTTP-only cookie
-      // res.cookie('token', appJwt, {
+      // setCookie(res,'token', appJwt, {
       //   httpOnly: true,
       //   secure: process.env.NODE_ENV === 'production',
       //   maxAge: 24 * 60 * 60 * 1000, // 1 day

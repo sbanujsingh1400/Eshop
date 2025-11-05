@@ -1,0 +1,118 @@
+name: Build, Push, and Deploy E-Shop
+
+on:
+  push:
+    branches: [ main ] # Runs only on push to the main branch
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }} # Your GitHub username/org
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Permission to push to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      # Build and push the BASE image first
+      - name: Build and push eshop-base
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.base
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Build and push all other images ---
+
+      - name: Build and push user-ui
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          build-args: |
+            APP_NAME=user-ui
+            NEXT_PUBLIC_SERVER_URI=/api
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=/ws
+            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push seller-ui
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          build-args: |
+            APP_NAME=seller-ui
+            NEXT_PUBLIC_SERVER_URI=/api
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=/ws
+            NEXT_PUBLIC_USER_UI_LINK=http://${{ secrets.VM_HOST }}
+            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Add a 'build-and-push' step for EVERY backend service ---
+      - name: Build and push backend services
+        run: |
+          SERVICES="api-gateway auth-service product-service order-service chatting-service kafka-service"
+          for SERVICE in $SERVICES; do
+            docker buildx build \
+              --file ./Dockerfile.backend \
+              --build-arg APP_NAME=$SERVICE \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-$SERVICE:latest \
+              --cache-from type=gha \
+              --cache-to type=gha,mode=max \
+              --push \
+              .
+          done
+
+  deploy:
+    name: Deploy to VM
+    needs: build-and-push # This job only runs if build-and-push succeeds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            # Navigate to your project directory
+            cd ~/eshop # Or whatever your repo folder is named
+
+            # Log in to GHCR on the VM
+            echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # Pull the latest version of your docker-compose file
+            git pull
+
+            # Pull all the new images defined in the compose file
+            docker compose pull
+
+            # Stop and restart all services with the new images
+            docker compose up -d
+
+            # Clean up old, unused images
+            docker image prune -f
