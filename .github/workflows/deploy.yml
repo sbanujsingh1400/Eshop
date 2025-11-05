@@ -2,11 +2,11 @@ name: Build, Push, and Deploy E-Shop
 
 on:
   push:
-    branches: [ master ] # Runs only on push to the main branch
+    branches: [ master ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }} # Your GitHub username/org
+  IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
   build-and-push:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Permission to push to GHCR
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -26,12 +26,14 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: network=host
+          driver-opts: |
+            network=host
 
-      # Build and push the BASE image first
+      # --- Base image ---
       - name: Build and push eshop-base
         uses: docker/build-push-action@v5
         with:
@@ -41,12 +43,10 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: false
-            secrets: |
-              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-      # --- Build and push all other images ---
-
+      # --- Frontend: user-ui ---
       - name: Build and push user-ui
         uses: docker/build-push-action@v5
         with:
@@ -61,10 +61,10 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: false
-            secrets: |
-              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
+      # --- Frontend: seller-ui ---
       - name: Build and push seller-ui
         uses: docker/build-push-action@v5
         with:
@@ -80,13 +80,13 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: false
-            secrets: |
-              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-      # --- Add a 'build-and-push' step for EVERY backend service ---
+      # --- Backend services ---
       - name: Build and push backend services
         run: |
+          docker login ${{ env.REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.GHCR_PAT }}
           SERVICES="api-gateway auth-service product-service order-service chatting-service kafka-service"
           for SERVICE in $SERVICES; do
             docker buildx build \
@@ -96,14 +96,12 @@ jobs:
               --cache-from type=gha \
               --cache-to type=gha,mode=max \
               --push \
-              --load \
-              --secrets GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }} \ 
               .
           done
 
   deploy:
     name: Deploy to VM
-    needs: build-and-push # This job only runs if build-and-push succeeds
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
@@ -114,20 +112,9 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            # Navigate to your project directory
-            cd ~/Eshop # Or whatever your repo folder is named
-
-            # Log in to GHCR on the VM
+            cd ~/Eshop
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-            # Pull the latest version of your docker-compose file
             git pull
-
-            # Pull all the new images defined in the compose file
             docker compose pull
-
-            # Stop and restart all services with the new images
             docker compose up -d
-
-            # Clean up old, unused images
             docker image prune -f
