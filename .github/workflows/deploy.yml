@@ -29,7 +29,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts:network=host
+          driver-opts: network=host
 
       # Build and push the BASE image first
       - name: Build and push eshop-base
