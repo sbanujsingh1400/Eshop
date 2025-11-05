@@ -100,7 +100,7 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             # Navigate to your project directory
-            cd ~/eshop # Or whatever your repo folder is named
+            cd ~/Eshop # Or whatever your repo folder is named
 
             # Log in to GHCR on the VM
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
