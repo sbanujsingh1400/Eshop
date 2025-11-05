@@ -25,7 +25,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copy ONLY the built app from the builder
 COPY --from=builder /app/dist/apps/${APP_NAME} ./
-COPY --from=e-shop-base /app/node_modules ./node_modules
+COPY --from=ghcr.io/sbanujsingh1400/eshop-base:latest /app/node_modules ./node_modules
 
 # Switch to non-root user
 USER appuser

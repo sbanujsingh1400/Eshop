@@ -52,7 +52,7 @@ ENV NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${NEXT_PUBLIC_CHATTING_WEBSOCKET_URI}
 ENV NEXT_PUBLIC_USER_UI_LINK=${NEXT_PUBLIC_USER_UI_LINK}
 ENV NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${NEXT_PUBLIC_STRIPE_PUBLIC_KEY}
 
-COPY --from=e-shop-base /app/node_modules ./node_modules
+COPY --from=ghcr.io/sbanujsingh1400/eshop-base:latest /app/node_modules ./node_modules
 
 
 

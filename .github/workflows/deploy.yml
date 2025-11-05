@@ -41,6 +41,9 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: false
+            secrets: |
+              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
       # --- Build and push all other images ---
 
@@ -58,6 +61,9 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: false
+            secrets: |
+              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
       - name: Build and push seller-ui
         uses: docker/build-push-action@v5
@@ -74,6 +80,9 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: false
+            secrets: |
+              GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
       # --- Add a 'build-and-push' step for EVERY backend service ---
       - name: Build and push backend services
@@ -87,6 +96,8 @@ jobs:
               --cache-from type=gha \
               --cache-to type=gha,mode=max \
               --push \
+              --load \
+              --secrets GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }} \ 
               .
           done
 
