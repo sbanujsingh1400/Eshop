@@ -1,5 +1,5 @@
 # --- Stage 1: Builder ---
-FROM e-shop-base AS builder
+FROM ghcr.io/sbanujsingh1400/eshop-base:latest AS builder
 
 # The app name will be passed from docker-compose.yml
 ARG APP_NAME
