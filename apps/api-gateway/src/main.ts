@@ -17,7 +17,7 @@ const app = express();
 //Middlewares declaration
 
  app.use(cors({
-  origin:["http://localhost:3000","http://localhost:3001","http://localhost:3003"],
+  origin:["http://localhost:3000","http://localhost:3001","http://localhost:3003","http://210.79.129.107",  "https://210.79.129.107"],
   allowedHeaders:["Authorization", "Content-Type"],
   credentials:true
  }))
