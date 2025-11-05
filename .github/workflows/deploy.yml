@@ -2,7 +2,7 @@ name: Build, Push, and Deploy E-Shop
 
 on:
   push:
-    branches: [ main ] # Runs only on push to the main branch
+    branches: [ master ] # Runs only on push to the main branch
 
 env:
   REGISTRY: ghcr.io
