@@ -12,7 +12,7 @@ href:'/shops'
 href:'/offers'
 },
 {title:"Become A Seller",
-href:'/become-seller'
+href:'/seller'
 }
 
 ]

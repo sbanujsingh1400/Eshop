@@ -54,9 +54,11 @@ jobs:
           file: ./Dockerfile.frontend
           build-args: |
             APP_NAME=user-ui
-            NEXT_PUBLIC_SERVER_URI=/api
-            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=/ws
+            NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
             NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+            NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
+            NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           cache-from: type=gha
@@ -72,10 +74,11 @@ jobs:
           file: ./Dockerfile.frontend
           build-args: |
             APP_NAME=seller-ui
-            NEXT_PUBLIC_SERVER_URI=/api
-            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=/ws
-            NEXT_PUBLIC_USER_UI_LINK=http://${{ secrets.VM_HOST }}
+            NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
             NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+            NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
+            NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           cache-from: type=gha
@@ -115,6 +118,8 @@ jobs:
             cd ~/Eshop
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
             git pull
+            echo "Creating production .env file from GitHub Secrets..."
+            echo "${{ secrets.PROD_ENV_FILE }}" > .env
             docker compose pull
             docker compose up -d
             docker image prune -f
