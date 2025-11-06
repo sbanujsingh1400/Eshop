@@ -19,18 +19,20 @@ export const WebSocketProvider = ({
 }) => {
 
     const wsRef = useRef<WebSocket | null>(null); 
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  // const [ws, setWs] = useState<WebSocket | null>(null);
   const [wsReady, setWsReady] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isUserLoading) return;
 
     const socket = new WebSocket(process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI!);
     // console.log(socket);
        wsRef.current=socket
-    setWs(socket);
-
+    // setWs(socket);
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+  };
     socket.onopen = () => {
       socket.send(`user_${user.id}`);
       setWsReady(true)
@@ -61,7 +63,7 @@ export const WebSocketProvider = ({
     };
   }, [user?.id]);
   
-  if(!wsReady)return null;
+  // if(!wsReady)return null;
    
   return (
     <WebSocketContext.Provider value={{ ws:wsRef.current, unreadCounts }}>

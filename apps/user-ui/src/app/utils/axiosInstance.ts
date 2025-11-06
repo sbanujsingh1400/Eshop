@@ -13,9 +13,11 @@ let refreshSubscribers: (() => void)[] = [];
 // Helper functions
 // ------------------------------
 const handleLogout = () => {
-  const publicPaths = ["/login", "/signup", "/forgot-password", "/"];
+  const publicPaths = ["/login", "/signup", "/forgot-password"];
   const currentPath = window.location.pathname;
-  const isPublicPath = publicPaths.includes(currentPath);
+  const isPublicPath = 
+  currentPath === "/" || 
+  publicPaths.some(prefix => currentPath.startsWith(prefix));
 
   if (!isPublicPath) {
     console.log("Redirecting to login...");
