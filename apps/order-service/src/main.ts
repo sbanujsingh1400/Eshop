@@ -17,11 +17,7 @@ const app = express();
 app.post('/create-order',bodyParser.raw({type:'application/json'}),createOrder);
 app.use(cookieParser());
 
-app.use(cors({
-  origin:["http://localhost:3000","http://localhost:3001","http://localhost:3002"],
-  allowedHeaders:["Authorization", "Content-Type"],
-  credentials:true
- }))
+
  
  app.use(express.json());
  

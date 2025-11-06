@@ -12,12 +12,13 @@ import initializeConfig from './libs/InitializeSiteConfig';
 
 
 const app = express();
-
+const user_uri =process.env.NEXT_PUBLIC_SELLER_URI!
+const seller_uri =process.env.NEXT_PUBLIC_USER_URI!
 
 //Middlewares declaration
 
  app.use(cors({
-  origin:["http://localhost:3000","http://localhost:3001","http://localhost:3003","http://210.79.129.107",  "https://210.79.129.107"],
+  origin:[user_uri,seller_uri],
   allowedHeaders:["Authorization", "Content-Type"],
   credentials:true
  }))
@@ -49,18 +50,16 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.get('/gateway-health', (req, res) => {
   res.send({ message: 'Welcome to api-gateway!!' });
 });
+const CHATTING_URL = process.env.CHATTING_SERVICE_URL;
+const ORDER_URL = process.env.ORDER_SERVICE_URL;
+const PRODUCT_URL = process.env.PRODUCT_SERVICE_URL;
+const AUTH_URL = process.env.AUTH_SERVICE_URL;
 
-// app.use("/chatting",proxy("http://localhost:6006"));
-// app.use("/order",proxy("http://localhost:6004"));
+app.use("/chatting", proxy(CHATTING_URL!));
+app.use("/order", proxy(ORDER_URL!));
+app.use("/product", proxy(PRODUCT_URL!));
+app.use("/", proxy(AUTH_URL!));
 
-// app.use("/seller",proxy("http://localhost:6003"));
-// app.use("/product",proxy("http://localhost:6002"))
-// app.use("/",proxy("http://localhost:6001"))
-
-app.use("/chatting",proxy("http://chatting-service:6006"));
-app.use("/order",proxy("http://order-service:6004"));
-app.use("/product",proxy("http://product-service:6002"))
-app.use("/",proxy("http://auth-service:6001"))
 
 
 

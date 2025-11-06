@@ -56,13 +56,13 @@ const page = () => {
         loginMutation.mutate(data);
      }
 
-    const googleAuthHandler = async()=>{
+    // const googleAuthHandler = async()=>{
         
-         const res:any= await axiosInstance.get('/google');
+    //      const res:any= await axiosInstance.get('/google');
 
-         console.log(res);
+    //      console.log(res);
 
-    }
+    // }
  
     return (
     <div className='w-full min-h-[80ch] bg-slate-50 flex flex-col items-center justify-center p-4' >
@@ -80,7 +80,7 @@ const page = () => {
                 Sign up
             </Link>
         </p>
-        <a href="api/google?type=login&&role=user"><GoogleButton  /></a>
+        <a href={`${process.env.NEXT_PUBLIC_SERVER_URI}/google?type=login&&role=user`}><GoogleButton  /></a>
         <div className="flex items-center text-slate-400 text-xs">
            <div className="flex-1 border-t border-slate-200"/>
            <span className="px-3 font-medium text-slate-500">OR CONTINUE WITH EMAIL</span>

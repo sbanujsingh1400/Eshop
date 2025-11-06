@@ -16,8 +16,7 @@ type FormData = {
     name:string
 }
 
-// NOTE: All logic and JSX structure are IDENTICAL to your original code. 
-// Only the className strings have been updated for a better UI.
+
 
 const page = () => {
  
@@ -129,16 +128,7 @@ const page = () => {
             </>
         ) : null}
 
-        {!showOtp && (
-            <>
-                <a href="http://localhost:8080/google?type=signup&&role=user"><GoogleButton  /></a>
-                <div className="flex items-center text-slate-400 text-xs">
-                    <div className="flex-1 border-t border-slate-200"/>
-                    <span className="px-3 font-medium text-slate-500">OR SIGNUP WITH EMAIL</span>
-                    <div className="flex-1 border-t border-slate-200"/>
-                </div>
-            </>
-        )}
+     
 
         {!showOtp?(<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
  

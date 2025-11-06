@@ -481,8 +481,8 @@ export const createStripeConnectLink = async (
 
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `http://localhost:3000/success`,
-      return_url: `http://localhost:3000/success`,
+      refresh_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
+      return_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
       type: "account_onboarding",
     });
 
@@ -917,7 +917,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const encodedState = Buffer.from(JSON.stringify({type,role})).toString('base64');
     const options:any = {
-      redirect_uri: `http://localhost:8080/google/callback`,
+      redirect_uri: `${process.env.NEXT_PUBLIC_SERVER_URI}/google/callback`,
       client_id: process.env.GOOGLE_CLIENT_ID,
       access_type: 'offline',
       response_type: 'code',
@@ -954,7 +954,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
         code,
         client_id: process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: `http://localhost:8080/google/callback`,
+        redirect_uri: `${process.env.NEXT_PUBLIC_SERVER_URI}/google/callback`,
         grant_type: 'authorization_code',
       };
       
@@ -975,7 +975,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
       });
       if(user && role=='user' &&type=='signup'){
 
-        return   res.status(500).redirect(`http://localhost:3001/signup`);
+        return   res.status(500).redirect(`${process.env.NEXT_PUBLIC_USER_URI}/signup`);
          }
     
       
@@ -1023,12 +1023,12 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
       // 6. Redirect the user to your frontend application
     
       
-      return   res.redirect(`http://localhost:3001/`);
+      return   res.redirect(`${process.env.NEXT_PUBLIC_USER_URI}`);
       
   
     } catch (error) {
       console.error('Failed to authenticate with Google', error);
-      res.redirect(`http://localhost:3001/login?error=true`);
+      res.redirect(`${process.env.NEXT_PUBLIC_USER_URI}/login?error=true`);
     }
   }
 

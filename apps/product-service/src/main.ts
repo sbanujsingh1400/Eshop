@@ -23,11 +23,7 @@ const port = process.env.PORT ? Number(process.env.PORT) : 6002;
 const app = express();
 
 app.use(cookieParser());
-app.use(cors({
-  origin:["http://localhost:3000"],
-  allowedHeaders:["Authorization", "Content-Type"],
-  credentials:true
- }))
+
 
  app.use(express.json({limit:"100mb"}));
  app.use(express.urlencoded({limit:"100mb",extended:true}));
