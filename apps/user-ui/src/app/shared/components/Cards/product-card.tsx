@@ -27,6 +27,7 @@ const isWishlisted= wishlist.some((item:any)=>{
   return item.id==product.id});
 const cart = useStore((state:any)=>state.cart)
 const isInCart= cart.some((item:any)=>item.id===product.id)
+
   
 useEffect(()=>{
    

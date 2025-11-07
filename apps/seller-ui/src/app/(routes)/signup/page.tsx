@@ -93,7 +93,7 @@ const page = () => {
   
      const signupMutation = useMutation({mutationFn:async (data:FormData)=>{
     //  console.log(`${process.env.NEXT_PUBLIC_SERVER_URI}/user-registration`,data);
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/seller-registration`,data);
+        const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/seller-registration`,data);
          
         console.log(response);
         return response.data;
@@ -111,7 +111,7 @@ const page = () => {
      const verifyOtpMutation=useMutation({mutationFn:async()=>{
  
    console.log('verify mutation ',otp);
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/verify-seller`,{...sellerData,otp:otp.join('')});
+        const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-seller`,{...sellerData,otp:otp.join('')});
 
         return response.data
 
@@ -122,7 +122,7 @@ const page = () => {
  
      const connectStripe = async()=>{
         try {
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/create-stripe-link`,{sellerId});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/create-stripe-link`,{sellerId});
         // @ts-ignore
             if(response?.data?.url){
                 // @ts-ignore

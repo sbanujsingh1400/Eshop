@@ -14,6 +14,7 @@ interface ShopCardProps {
     followers?: [];
     rating?: number;
     category?: string;
+    ratings:string
   };
 }
 
@@ -34,7 +35,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         />
       </div>
       {/* Avatar */}
-      <div className='relative flex justify-center -mt-10'>
+      {/* <div className='relative flex justify-center -mt-10'>
         <div className='w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-lg transition-transform duration-300 group-hover:scale-110 bg-white'>
           <Image
             src={
@@ -47,7 +48,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             className='object-cover'
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Info */}
       <div className='px-4 pb-5 pt-2 text-center'>
@@ -55,9 +56,9 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         <h3 className='text-lg font-bold text-slate-800'>{shop?.name}</h3>
 
         {/* Followers Count */}
-        <p className='text-sm text-slate-500 mt-1'>
+        {/* <p className='text-sm text-slate-500 mt-1'>
           {shop?.followers?.length ?? 0} Followers
-        </p>
+        </p> */}
 
         {/* Address + Rating */}
         <div className='flex items-center justify-center flex-wrap text-xs text-slate-500 mt-3 gap-x-4 gap-y-1'>
@@ -71,7 +72,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
 
           <span className='flex items-center gap-1'>
             <Star className='w-4 h-4 text-yellow-400 fill-yellow-400' />
-            {shop.rating ?? 'N/A'}
+            {shop.ratings ?? 'N/A'}
           </span>
         </div>
         {/* Category */}

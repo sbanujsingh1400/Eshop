@@ -85,7 +85,7 @@ const page = () => {
 
   
      const signupMutation = useMutation({mutationFn:async (data:FormData)=>{
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/user-registration`,data);
+        const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/user-registration`,data);
         return response.data;
      },onSuccess:(_,formData)=>{
         setUserData(formData);
@@ -101,7 +101,7 @@ const page = () => {
  
 
      const verifyOtpMutation=useMutation({mutationFn:async()=>{
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/verify-user`,{...userData,otp:otp.join('')});
+        const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-user`,{...userData,otp:otp.join('')});
         return response.data
      },onSuccess:()=>{
         router.push('/')

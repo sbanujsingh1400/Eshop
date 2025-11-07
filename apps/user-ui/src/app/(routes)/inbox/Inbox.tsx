@@ -54,6 +54,7 @@ const {data:messages=[]}= useQuery({
 const {data:conversations,isLoading}= useQuery({
     queryKey:['conversations'],
     queryFn:async ()=>{
+      console.log('calling api')
         const res:any = await axiosInstance.get("/chatting/get-user-conversations",isProtected);
         console.log(res.data)
         return res.data.conversations;
@@ -122,7 +123,7 @@ return chat.lastMessage || "";
 
 const loadMoreMessages = async ()=>{
     const nextPage = page+1;
-    const res:any = await axiosInstance.get(`chatting/get-messages/${conversationId}?page=${nextPage}`,isProtected);
+    const res:any = await axiosInstance.get(`/chatting/get-messages/${conversationId}?page=${nextPage}`,isProtected);
     queryClient.setQueryData(["messages",conversationId],(old:any=[])=>[...res.data.messages.reverse(),...old]);
     setPage(nextPage);
     setHasMore(res?.data?.hasMore);
@@ -183,7 +184,7 @@ if (isUserLoading) {
   );
 }
 
-console.log(chats)
+
   return (
     <div className='w-full bg-white' >
         <div className="max-w-7xl mx-auto py-8">

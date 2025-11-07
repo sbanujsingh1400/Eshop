@@ -65,7 +65,7 @@ return res.status(201).json({conversation:newGroup,isNew:true});
 
 
 export const getUserConversations = async (req:any,res:Response,next:NextFunction)=>{
-
+   console.log('inside getUser convo')
     try {
         
         const userId = req.user.id;

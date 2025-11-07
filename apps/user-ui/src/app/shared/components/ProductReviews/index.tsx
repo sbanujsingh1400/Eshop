@@ -54,7 +54,7 @@ export const ProductReviews = ({
   const otherReviews = reviews.filter(
     (r) => r?.userId!== currentUser?.id
   );
-console.log(userReview)
+// console.log(userReview)
   const handleFormSubmit = async (data: { rating: number; comment: string }) => {
 
     await onReviewSubmit(data);

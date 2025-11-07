@@ -52,7 +52,7 @@ const ShopDetailsForm: React.FC<ShopDetailsFormProps> = ({
  });
 
  const updateShopMutation = useMutation({mutationFn:async (data:FormData)=>{
-  //  console.log(`${process.env.NEXT_PUBLIC_SERVER_URI}/user-registration`,data);
+  
       const response = await axiosInstance.put(`/shop-details-update`,data);
        setIsLoading(true);
       console.log(response);

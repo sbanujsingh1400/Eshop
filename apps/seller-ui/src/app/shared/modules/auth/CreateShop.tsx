@@ -15,7 +15,7 @@ const CreateShop = ({ sellerId, setActiveStep }: { sellerId: string, setActiveSt
 
     const shopCreateMutation = useMutation({
         mutationFn: async (data: FormData) => {
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/create-shop`,data,{withCredentials:true});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/create-shop`,data,{withCredentials:true});
             return response.data;
         },
         onSuccess: () => {

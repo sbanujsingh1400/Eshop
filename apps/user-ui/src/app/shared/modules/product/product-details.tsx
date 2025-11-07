@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingCartIcon, WalletMinimal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBag, ShoppingCartIcon, WalletMinimal } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import Zoom from 'react-medium-image-zoom';
+import {useRouter} from 'next/navigation'
 // @ts-ignore
 import 'react-medium-image-zoom/dist/styles.css';
 import Ratings from '../../components/ratings';
@@ -15,6 +16,7 @@ import useDeviceTracking from '../../../hooks/useDeviceTracking';
 import ProductCard from '../../components/Cards/product-card';
 import axiosInstance from '../../../utils/axiosInstance';
 import { ProductReviews } from '../../components/ProductReviews';
+import { isProtected } from '@/app/utils/protected';
 
 export type Review = {
     id: string;
@@ -32,11 +34,13 @@ export type Review = {
 const ProductDetails = ({productDetails}:any) => {
     const [currentImage,setCurrentImage]= useState(productDetails?.images[0]?.url);
     const[currentIndex,setCurrentIndex]=useState(0);
+    const cart = useStore((state:any)=>state.cart)
     const[isSelected,setIsSelected]=useState(productDetails?.colors?.[0] || "");
     const[isSizeSelected,setIsSizeSelected]=useState(productDetails?.sizes?.[0] || "");
-    const[quantity,setQuantity]=useState(1);
+    const [quantity,setQuantity]= useState(cart.find((item:any)=>item?.id==productDetails?.id)?.quantity|| 1);
     const[priceRange,setPriceRange]=useState([productDetails?.sale_price,1199]);
     const[recommendedProducts,setRecommendedProducts]=useState([]);
+    const router = useRouter();
 
 
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -55,9 +59,13 @@ const ProductDetails = ({productDetails}:any) => {
     const wishlist = useStore((state:any)=>state.wishlist);
     const isWishlisted= wishlist.some((item:any)=>{ 
       return item.id==productDetails.id});
-    const cart = useStore((state:any)=>state.cart)
-    const isInCart= cart.some((item:any)=>item.id===productDetails.id)
     
+    // console.log(cart);
+    const isInCart= cart.some((item:any)=>{
+      console.log(item)
+    return   item.id===productDetails.id
+    })
+    const addtoCartDisable=(isInCart && quantity== cart.find((item:any)=>item?.id==productDetails?.id)?.quantity )
     const prevImage= ()=>{
         if(currentIndex>0){
             setCurrentIndex(currentIndex-1);
@@ -79,7 +87,7 @@ const ProductDetails = ({productDetails}:any) => {
     const fetchFilteredProducts = async ()=>{
         try {
             const query = new URLSearchParams();
-            console.log(query)
+            // console.log(query)
             query.set("priceRange",priceRange.join(','));
             query.set("page","1");
             query.set("limit","5");
@@ -129,13 +137,13 @@ const ProductDetails = ({productDetails}:any) => {
           // --- REPLACE WITH YOUR REAL "UPSERT" API CALL ---
           // This logic should create a new review or update an existing one
           // based on the (userId, productId) unique constraint.
-          console.log('Submitting review:', data,productDetails.id);
+          // console.log('Submitting review:', data,productDetails.id);
           if(!isSubmittingReview){
             const res:any = await axiosInstance.post(`/product/reviews/${productDetails.id}`, {
                 ...data,
                 productId: productDetails.id,
               });
-              console.log(res)
+              // console.log(res)
           }
         
           
@@ -154,7 +162,7 @@ const ProductDetails = ({productDetails}:any) => {
         setIsSubmittingReview(true);
         try {
           // --- REPLACE WITH YOUR REAL DELETE API CALL ---
-          console.log('Deleting review:', reviewId);
+          // console.log('Deleting review:', reviewId);
           // await axiosInstance.delete(`/reviews/${reviewId}`);
           
           // --- Mock deletion (Remove this) ---
@@ -174,7 +182,21 @@ const ProductDetails = ({productDetails}:any) => {
         // fetchFilteredProducts()
         fetchReviews();
     },[priceRange])
-  
+    const handleChat = async (e:any)=>{
+        e.preventDefault();
+    
+      try {
+         
+        const res:any = await axiosInstance.post('chatting/create-user-conversationGroup',{sellerId:productDetails?.Shop?.sellerId},isProtected);
+        router.push(`/inbox?conversationId=${res.data.conversation.id}`) ;
+      
+      } catch (error) {
+        console.log(error)
+      } 
+         
+      
+       }
+
   return (
     <div className='w-full bg-slate-50 py-8 lg:py-12' >
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-2xl shadow-2xl shadow-slate-200/50 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] gap-8 lg:gap-12" >
@@ -273,15 +295,15 @@ const ProductDetails = ({productDetails}:any) => {
 <div className="mt-8">
     <div className="flex items-center gap-4">
         <div className="flex items-center rounded-lg border border-slate-300">
-            <button className='px-4 py-2 cursor-pointer text-slate-800 font-bold hover:bg-slate-100 rounded-l-lg transition-colors' onClick={()=>setQuantity((prev)=>Math.max(1,prev-1))} >-</button>
+            <button className='px-4 py-2 cursor-pointer text-slate-800 font-bold hover:bg-slate-100 rounded-l-lg transition-colors' onClick={()=>setQuantity((prev:any)=>Math.max(1,prev-1))} >-</button>
             <span className='px-5 py-2 bg-white font-semibold text-slate-900' >{quantity}</span>
-            <button className='px-4 py-2 cursor-pointer text-slate-800 font-bold hover:bg-slate-100 rounded-r-lg transition-colors' onClick={()=>setQuantity((prev)=>(prev+1))} >+</button>
+            <button className='px-4 py-2 cursor-pointer text-slate-800 font-bold hover:bg-slate-100 rounded-r-lg transition-colors' onClick={()=>setQuantity((prev:any)=>(prev+1))} >+</button>
         </div>
         {productDetails.stock>0 ?(<span className='text-sm text-green-600 font-semibold'>In Stock <span className='text-slate-500 font-medium' >({productDetails?.stock} items left)</span> </span>):(<span className='text-red-500 font-semibold'>Out of Stock</span>)}
     </div>
-    <button className={`w-full flex mt-6 items-center justify-center gap-2 px-5 py-3 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 ${isInCart?"cursor-not-allowed bg-slate-400 hover:bg-slate-400 shadow-none":"bg-blue-600 hover:bg-blue-700 cursor-pointer"}`} onClick={()=> !isInCart &&addTocart({...productDetails,quantity:quantity,selectedOptions:{ color:isSelected,size:isSizeSelected}},user,location,deviceInfo,)}   >
-        <ShoppingCartIcon size={20} />
-        Add to Cart
+    <button disabled={addtoCartDisable} className={`w-full flex mt-6 items-center justify-center gap-2 px-5 py-3 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 ${addtoCartDisable?"cursor-not-allowed bg-slate-400 hover:bg-slate-400 shadow-none":"bg-blue-600 hover:bg-blue-700 cursor-pointer"}`} onClick={()=> (!isInCart ||!addtoCartDisable) &&addTocart({...productDetails,quantity:quantity,selectedOptions:{ color:isSelected,size:isSizeSelected}},user,location,deviceInfo,)}   >
+        <ShoppingBag size={20} />
+        {addtoCartDisable?"Already added":"Add to Cart"}
     </button>
 </div>
                 </div>
@@ -321,9 +343,9 @@ const ProductDetails = ({productDetails}:any) => {
                    <Link href={`/shop/${productDetails?.Shop.id}`}>{productDetails?.Shop?.name}</Link>
                 </span>
             </div>
-            <Link href={"#"} className='text-blue-600 font-semibold text-sm flex items-center gap-1 hover:underline' >
+            <button  onClick={(e:any)=>handleChat(e)} className='text-blue-600 font-semibold text-sm flex items-center gap-1 hover:underline' >
                 <MessageSquareText size={16} /> Chat
-            </Link>
+            </button>
         </div>
     </div>
       {/* Seller performance stats */}

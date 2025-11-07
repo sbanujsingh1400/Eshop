@@ -21,7 +21,7 @@ const useSeller = ()=>{
         retry:1,
     });
 
-    console.log(process.env.NEXT_PUBLIC_SERVER_URI)
+    // console.log(process.env.NEXT_PUBLIC_SERVER_URI)
     return {seller,isLoading}
 
 }

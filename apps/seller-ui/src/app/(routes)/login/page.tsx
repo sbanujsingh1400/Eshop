@@ -32,7 +32,7 @@ const page = () => {
      const loginMutation = useMutation<any, AxiosError, FormData>({
         mutationFn:async(formData:FormData)=>{
          
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/login-seller`,formData,{withCredentials:true});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/login-seller`,formData,{withCredentials:true});
 
             return response.data
     

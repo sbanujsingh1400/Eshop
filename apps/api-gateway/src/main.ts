@@ -50,13 +50,13 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.get('/gateway-health', (req, res) => {
   res.send({ message: 'Welcome to api-gateway!!' });
 });
-const CHATTING_URL = process.env.CHATTING_SERVICE_URL;
-const ORDER_URL = process.env.ORDER_SERVICE_URL;
-const PRODUCT_URL = process.env.PRODUCT_SERVICE_URL;
-const AUTH_URL = process.env.AUTH_SERVICE_URL;
-
+const CHATTING_URL =process.env.NODE_ENV=='production'? process.env.CHATTING_SERVICE_URL: process.env.CHATTING_SERVICE_URL_LOCAL;
+const ORDER_URL =process.env.NODE_ENV=='production'?  process.env.ORDER_SERVICE_URL:process.env.ORDER_SERVICE_URL_LOCAL;
+const PRODUCT_URL =process.env.NODE_ENV=='production'?  process.env.PRODUCT_SERVICE_URL:process.env.PRODUCT_SERVICE_URL_LOCAL;
+const AUTH_URL =process.env.NODE_ENV=='production'?  process.env.AUTH_SERVICE_URL:process.env.AUTH_SERVICE_URL_LOCAL;
+console.log( process.env.CHATTING_SERVICE_URL)
 app.use("/chatting", proxy(CHATTING_URL!));
-app.use("/order", proxy(ORDER_URL!));
+app.use("/order", proxy(ORDER_URL!)); 
 app.use("/product", proxy(PRODUCT_URL!));
 app.use("/", proxy(AUTH_URL!));
 

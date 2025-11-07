@@ -25,8 +25,10 @@ export const WebSocketProvider = ({
 
   useEffect(() => {
     if (!user?.id || isUserLoading) return;
+    
+    const socket = new WebSocket(process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI! :process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI_LOCAL!);
+    
 
-    const socket = new WebSocket(process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI!);
     // console.log(socket);
        wsRef.current=socket
     // setWs(socket);
@@ -63,7 +65,7 @@ export const WebSocketProvider = ({
     };
   }, [user?.id]);
   
-  // if(!wsReady)return null;
+  if(!wsReady)return null;
    
   return (
     <WebSocketContext.Provider value={{ ws:wsRef.current, unreadCounts }}>

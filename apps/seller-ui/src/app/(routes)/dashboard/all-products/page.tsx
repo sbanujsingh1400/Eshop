@@ -79,7 +79,7 @@ const ProductList = () => {
 
       return (
         <Link
-          href={`${process.env.NEXT_PUBLIC_USER_UI_LINK}/product/${row.original.slug}`}
+          href={`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_USER_UI_LINK:process.env.NEXT_PUBLIC_USER_UI_LINK_LOCAL}/product/${row.original.slug}`}
           className="font-medium text-blue-400 hover:underline"
           title={row.original.title}
         >

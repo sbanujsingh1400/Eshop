@@ -79,7 +79,7 @@ const page = () => {
     
      const requestOtpMutation = useMutation({
         mutationFn:async({email}:{email:string})=>{
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/forgot-password-user`,{email});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/forgot-password-user`,{email});
            return response.data;
         },
         onSuccess:(_,{email})=>{
@@ -100,7 +100,7 @@ const page = () => {
         mutationFn:async()=>{
 
             if(!userEmail)return;
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/verify-forgot-password-user`,{email:userEmail,otp:otp.join()});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-forgot-password-user`,{email:userEmail,otp:otp.join()});
            return response.data;
         },
         onSuccess:()=>{
@@ -129,7 +129,7 @@ const page = () => {
 
             if(!password)return;
             // console.log(password,userEmail)
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/reset-password-user`,{email:userEmail,newPassword:password},{withCredentials:true});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/reset-password-user`,{email:userEmail,newPassword:password},{withCredentials:true});
            return response.data;
         },
         onSuccess:(_,{password})=>{

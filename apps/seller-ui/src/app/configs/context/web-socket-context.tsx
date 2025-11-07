@@ -17,17 +17,17 @@ export const WebSocketProvider = ({
 }) => {
 
     const wsRef = useRef<WebSocket | null>(null); 
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  
   const [wsReady, setWsReady] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!seller?.id) return;
 
-    const socket = new WebSocket(process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI!);
+    const socket = new WebSocket(process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI! :process.env.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI_LOCAL!);
     
        wsRef.current=socket
-    setWs(socket);
+    
 
     socket.onopen = () => {
       socket.send(`seller_${seller.id}`);

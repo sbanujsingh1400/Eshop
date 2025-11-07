@@ -12,7 +12,7 @@ href:'/shops'
 href:'/offers'
 },
 {title:"Become A Seller",
-href:'/seller'
+href: process.env.NEXT_PUBLIC_SELLER_URI+"/signup"!
 }
 
 ]

@@ -2,7 +2,7 @@ import axios from "axios";
 import { runRedirectToLogin } from "./redirect";
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URI,
+  baseURL: process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL,
   withCredentials: true,
 });
 
@@ -76,7 +76,7 @@ axiosInstance.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_SERVER_URI}/refresh-token`,
+          `${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/refresh-token`,
           {},
           { withCredentials: true }
         );

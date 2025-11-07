@@ -917,7 +917,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const encodedState = Buffer.from(JSON.stringify({type,role})).toString('base64');
     const options:any = {
-      redirect_uri: `${process.env.NEXT_PUBLIC_SERVER_URI}/google/callback`,
+      redirect_uri: `${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/google/callback`,
       client_id: process.env.GOOGLE_CLIENT_ID,
       access_type: 'offline',
       response_type: 'code',
@@ -954,7 +954,7 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
         code,
         client_id: process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: `${process.env.NEXT_PUBLIC_SERVER_URI}/google/callback`,
+        redirect_uri: `${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/google/callback`,
         grant_type: 'authorization_code',
       };
       

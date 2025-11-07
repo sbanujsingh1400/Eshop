@@ -461,7 +461,7 @@ export const getProductDetails = async (req:any,res:Response,next:NextFunction)=
   try {
      
        
-        const product = await prisma.products.findUnique({where:{slug:req?.params?.slug!},include:{images:true,Shop:true,reviews:{include:{users:{include:{avatar:{select:{url:true}}}}}}}})
+        const product = await prisma.products.findUnique({where:{slug:req?.params?.slug!},include:{images:true,Shop:{include:{sellers:true}},reviews:{include:{users:{include:{avatar:{select:{url:true}}}}}}}})
          if(!product)return next(new ValidationError("products  not found"));
          
         return res.status(200).json({success:true,product});

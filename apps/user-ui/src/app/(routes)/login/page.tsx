@@ -35,7 +35,7 @@ const page = () => {
      const loginMutation = useMutation<any, AxiosError, FormData>({
         mutationFn:async(formData:FormData)=>{
          
-            const response:any = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/login-user`,formData,{withCredentials:true});
+            const response:any = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/login-user`,formData,{withCredentials:true});
 
             return response.data
     
@@ -80,7 +80,7 @@ const page = () => {
                 Sign up
             </Link>
         </p>
-        <a href={`${process.env.NEXT_PUBLIC_SERVER_URI}/google?type=login&&role=user`}><GoogleButton  /></a>
+        <a href={`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/google?type=login&&role=user`}><GoogleButton  /></a>
         <div className="flex items-center text-slate-400 text-xs">
            <div className="flex-1 border-t border-slate-200"/>
            <span className="px-3 font-medium text-slate-500">OR CONTINUE WITH EMAIL</span>

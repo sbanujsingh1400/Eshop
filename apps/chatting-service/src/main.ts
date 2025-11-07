@@ -6,7 +6,7 @@ import { startConsumer } from './chat-message.consumer';
 import router from './routes/chat.routes';
 
 const app = express();
-const port = process.env.PORT || 6006;
+const port = 6006;
 const host ='0.0.0.0'
 app.use(express.json());
 app.use(cookieParser());

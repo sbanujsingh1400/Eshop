@@ -46,13 +46,19 @@ const isWishlisted= wishlist.some((item:any)=>{
 setIsLoading(true);
 
 try {
-   
-  const res:any = await axiosInstance.post('chatting/create-user-conversationGroup',{sellerId:data?.Shop?.sellerId},isProtected);
-  router.push(`/inbox?conversationId=${res.data.conversation.id}`) ;
+  console.log('inside chat')   
 
+  const res:any = await axiosInstance.post('/chatting/create-user-conversationGroup',{sellerId:data?.Shop?.sellerId},isProtected);
+  console.log(res.data);
+  console.log('after chat')   
+  router.push(`/inbox?conversationId=${res.data.conversation.id}`) ;
+  console.log('after chat 1')   
+  
 } catch (error) {
   console.log(error)
+  setIsLoading(false);
 } finally{
+  console.log('finally')
   setIsLoading(false);
 }
    
@@ -60,7 +66,7 @@ try {
  }
 
  const addtoCartDisable=(isInCart && quantity== cart.find((item:any)=>item?.id==data?.id)?.quantity )
-console.log(cart.find((item:any)=>item?.id==data?.id)?.quantity,isInCart && quantity== cart.find((item:any)=>item?.id==data?.id)?.quantity)
+// console.log(cart.find((item:any)=>item?.id==data?.id)?.quantity,isInCart && quantity== cart.find((item:any)=>item?.id==data?.id)?.quantity)
   return (
     <div className='fixed flex items-center justify-center top-0 left-0 h-screen w-full bg-black/60 backdrop-blur-sm z-50 p-4' onClick={()=>setOpen(false)}  >
         
@@ -177,7 +183,7 @@ console.log(cart.find((item:any)=>item?.id==data?.id)?.quantity,isInCart && quan
             <button className='px-4 py-2 cursor-pointer text-slate-800 font-bold hover:bg-slate-100 rounded-r-lg transition-colors' onClick={()=>setQuantity((prev:number)=>(prev+1))} >+</button>
         </div>
     <button disabled={addtoCartDisable}  className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white font-semibold rounded-lg transition-all transform hover:-translate-y-px active:translate-y-0 ${addtoCartDisable ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'}`}  onClick={()=> !addtoCartDisable &&addTocart({...data,quantity:quantity},user,location,deviceInfo)} >
-        <ShoppingCart size={20} /> Add to Cart
+        <ShoppingCart size={20} /> {addtoCartDisable?"Already added":"Add to Cart"}
     </button>
     <button className='flex-shrink-0 p-3 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors' >
         <Heart size={24} fill={isWishlisted?'#ef4444':'transparent'} stroke={isWishlisted?'#ef4444':'#4b5563'}  onClick={()=> { 
