@@ -63,5 +63,6 @@ out-tsc
 
 # Local environment files
 .env
+.env.example
 .env.local
 .env.production
