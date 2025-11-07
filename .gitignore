@@ -66,3 +66,6 @@ out-tsc
 .env.example
 .env.local
 .env.production
+.env.prod
+.env.uat
+
