@@ -5,8 +5,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ShopCard from '../../shared/components/Cards/ShopCard'
-import { categories } from '@/configs/categories'
-import { countries } from '@/configs/countries'
+import { categories } from '@/app/configs/categories'
+import { countries } from '@/app/configs/countries'
 
 // NOTE: All logic and JSX structure are IDENTICAL. Only className strings have been updated for a better UI.
 

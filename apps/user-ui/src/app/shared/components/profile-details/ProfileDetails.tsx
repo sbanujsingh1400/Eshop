@@ -1,5 +1,5 @@
 import axiosInstance from '@/app/utils/axiosInstance';
-import { countries } from '@/configs/countries';
+import { countries } from '@/app/configs/countries';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, X } from 'lucide-react'
 import Image from 'next/image'

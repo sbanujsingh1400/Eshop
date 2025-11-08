@@ -1,6 +1,6 @@
 'use client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { countries } from '@/configs/countries';
+import { countries } from '@/app/configs/countries';
 import { MapPin, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form';

@@ -2,7 +2,7 @@ name: Smart Build and Deploy E-Shop
 
 on:
   push:
-    branches: [ master ]
+    branches: [ post_cicd ]
 
 env:
   REGISTRY: ghcr.io

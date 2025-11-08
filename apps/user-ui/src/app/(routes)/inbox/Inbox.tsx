@@ -5,7 +5,7 @@ import useUser from '@/app/hooks/useUser';
 import ChatInput from '@/app/shared/components/chats/chatInput';
 import axiosInstance from '@/app/utils/axiosInstance';
 import { isProtected } from '@/app/utils/protected';
-import { useWebSocket } from '@/configs/context/web-socket-context';
+import { useWebSocket } from '@/app/configs/context/web-socket-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation'

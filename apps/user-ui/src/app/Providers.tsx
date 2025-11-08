@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import useUser from './hooks/useUser';
-import { WebSocketProvider } from '@/configs/context/web-socket-context';
+import { WebSocketProvider } from '@/app/configs/context/web-socket-context';
 
 const Providers = ({children}:{children:React.ReactNode}) => {
 
