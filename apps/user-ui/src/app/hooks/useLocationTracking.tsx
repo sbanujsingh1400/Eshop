@@ -27,7 +27,7 @@ const useLocationTracking = () => {
       return;
     }
 
-    fetch('http://ip-api.com/json/')
+    fetch('https://ipinfo.io/json')
       .then(res => res.json())
       .then(data => {
         const newLocation = {
