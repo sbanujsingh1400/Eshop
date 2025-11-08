@@ -29,7 +29,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Install node_modules to get Nx installed
+      # --- THIS IS THE FIX ---
+      # We must install dependencies so Nx can build its project graph
       - name: Install Dependencies
         run: npm install
 
@@ -51,6 +52,7 @@ jobs:
         id: get-affected
         run: |
           # Get a JSON list of affected apps, comparing HEAD to the previous commit on master
+          # We use npx to run the locally-installed version of Nx
           AFFECTED_LIST=$(npx nx affected:apps --base=origin/master~1 --head=HEAD --plain)
           echo "Affected apps: $AFFECTED_LIST"
           # Convert space-separated list to JSON array
