@@ -29,6 +29,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Install node_modules to get Nx installed
+      - name: Install Dependencies
+        run: npm install
+
       # Step 1: Check if the base image needs rebuilding
       - name: Check base image files
         uses: dorny/paths-filter@v2
@@ -46,8 +50,6 @@ jobs:
       - name: Get affected apps
         id: get-affected
         run: |
-          # Install Nx
-          npm install -g nx@21.5.3
           # Get a JSON list of affected apps, comparing HEAD to the previous commit on master
           AFFECTED_LIST=$(npx nx affected:apps --base=origin/master~1 --head=HEAD --plain)
           echo "Affected apps: $AFFECTED_LIST"
