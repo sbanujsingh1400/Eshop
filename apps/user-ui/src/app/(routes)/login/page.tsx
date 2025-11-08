@@ -68,7 +68,7 @@ const page = () => {
     <div className='w-full min-h-[80ch] bg-slate-50 flex flex-col items-center justify-center p-4' >
         <h1 className='text-4xl font-bold text-slate-800 text-center' >Login</h1>
         <p className="text-center text-base text-slate-500 mt-2 mb-8">
-            Home . Login
+            Home . Loginnn
         </p>
      
        <div className='w-full flex justify-center' >
