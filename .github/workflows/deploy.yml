@@ -46,6 +46,8 @@ jobs:
       - name: Get affected apps
         id: get-affected
         run: |
+          # Install Nx
+          npm install -g nx@21.5.3
           # Get a JSON list of affected apps, comparing HEAD to the previous commit on master
           AFFECTED_LIST=$(npx nx affected:apps --base=origin/master~1 --head=HEAD --plain)
           echo "Affected apps: $AFFECTED_LIST"
