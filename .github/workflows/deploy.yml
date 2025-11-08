@@ -40,9 +40,10 @@ jobs:
           context: .
           file: ./Dockerfile.base
           push: true
+          no-cache: true # <-- CHANGED
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # cache-from: type=gha  <-- REMOVED
+          # cache-to: type=gha,mode=max <-- REMOVED
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
@@ -60,9 +61,10 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
+          no-cache: true # <-- CHANGED
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # cache-from: type=gha  <-- REMOVED
+          # cache-to: type=gha,mode=max <-- REMOVED
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
@@ -80,9 +82,10 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
+          no-cache: true # <-- CHANGED
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # cache-from: type=gha  <-- REMOVED
+          # cache-to: type=gha,mode=max <-- REMOVED
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
@@ -96,8 +99,9 @@ jobs:
               --file ./Dockerfile.backend \
               --build-arg APP_NAME=$SERVICE \
               --tag ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-$SERVICE:latest \
-              --cache-from type=gha \
-              --cache-to type=gha,mode=max \
+              --no-cache \ # <-- CHANGED
+              # cache-from type=gha \ <-- REMOVED
+              # cache-to type=gha,mode=max \ <-- REMOVED
               --push \
               .
           done

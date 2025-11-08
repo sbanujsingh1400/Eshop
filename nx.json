@@ -86,7 +86,7 @@
   ],
   "targetDefaults": {
     "@nx/esbuild:esbuild": {
-      "cache": true,
+      "cache": false,
       "dependsOn": [
         "^build"
       ],
