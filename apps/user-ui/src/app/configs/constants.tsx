@@ -13,7 +13,9 @@ href:'/offers'
 },
 {title:"Become A Seller",
 href:  `${
-    process.env.NEXT_PUBLIC_SELLER_URI?.includes('eshop')?"https://eshop.seller.mypersonalproject.site/signup":"https://localhost:3000/signup"
+    process.env.NEXT_PUBLIC_NODE_ENVIRONMENT !== 'production'
+      ?  'http://localhost:3000/signup'
+      :  'https://eshop.seller.mypersonalproject.site/signup'
   }`
 }
 
