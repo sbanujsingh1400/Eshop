@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import ejs from "ejs";
 import path from 'path'
 import { fileURLToPath } from 'url';
+import { emailTemplate } from '../email-templates/email-templates';
 
 dotenv.config();
 
@@ -23,17 +24,22 @@ const renderEmailTemplate = async (templateName:string,data:Record<string,any>):
     
     
 
-    const templatePath = path.join(
-        __dirname,
-        "..",
-        "..",
-        'utils',
-        'email-templates',
-        `${templateName}.ejs`
+    // const templatePath = path.join(
+    //     __dirname,
+    //     "..",
+    //     "..",
+    //     'utils',
+    //     'email-templates',
+    //     `${templateName}.ejs`
 
-    );
-
-    return  ejs.renderFile(templatePath,data)
+    // );
+// console.log("__________________________________",templatePath,"__________________________________");
+const template = emailTemplate[templateName];   
+console.log("__________________________________",template,"__________________________________"); 
+if (!template) {
+    throw new Error(`Template "${templateName}" not found`);
+}
+return  ejs.render(template,data )
 }
 
 // send an email using nodemailer
