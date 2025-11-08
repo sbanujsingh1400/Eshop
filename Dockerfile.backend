@@ -9,7 +9,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npx nx build ${APP_NAME} --no-cache
+RUN npx nx build ${APP_NAME} 
 
 
 # --- Stage 2: Production ---
