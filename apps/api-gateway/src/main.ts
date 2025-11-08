@@ -16,7 +16,7 @@ const user_uri =process.env.NEXT_PUBLIC_SELLER_URI!
 const seller_uri =process.env.NEXT_PUBLIC_USER_URI!
 
 //Middlewares declaration
-
+console.log(user_uri,seller_uri)
  app.use(cors({
   origin:[user_uri,seller_uri],
   allowedHeaders:["Authorization", "Content-Type"],
