@@ -163,6 +163,7 @@ jobs:
           file: ./Dockerfile.frontend
           build-args: |
             APP_NAME=user-ui
+            NEXT_PUBLIC_NODE_ENVIRONMENT=${{ vars.NEXT_PUBLIC_NODE_ENVIRONMENT }}
             NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
             NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
             NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
