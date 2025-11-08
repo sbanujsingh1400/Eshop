@@ -14,7 +14,7 @@ import initializeConfig from './libs/InitializeSiteConfig';
 const app = express();
 const user_uri =process.env.NEXT_PUBLIC_SELLER_URI!
 const seller_uri =process.env.NEXT_PUBLIC_USER_URI!
-console.log(user_uri,seller_uri)
+console.log("_________",user_uri,seller_uri,"___________")
 //Middlewares declaration
 console.log(user_uri,seller_uri)
  app.use(cors({
