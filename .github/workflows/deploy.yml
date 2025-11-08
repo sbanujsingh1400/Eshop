@@ -1,4 +1,4 @@
-name: Build, Push, and Deploy E-Shop
+name: Build, Push, and Deploy E-Shop (Optimized)
 
 on:
   push:
@@ -7,122 +7,154 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_OWNER: ${{ github.repository_owner }}
+  # --- IMPORTANT ---
+  # List all your deployable app names here (matching your 'apps' directory)
+  ALL_APPS: >
+    user-ui seller-ui api-gateway auth-service product-service order-service chatting-service kafka-service
 
 jobs:
-  # ----------------------------------------------------
-  # JOB 1: Check which files and apps were affected
-  # This job runs first and tells the other jobs what to do.
-  # ----------------------------------------------------
-  check-changes:
-    name: Check for Affected Apps
+  # Job 1: Determine which apps are affected by the code changes
+  determine-affected:
+    name: Determine Affected Apps
     runs-on: ubuntu-latest
     outputs:
-      # This will be 'true' or 'false'
-      build_base: ${{ steps.filter.outputs.base }}
-      # This will be a JSON array string like '["user-ui", "api-gateway"]'
-      affected_apps_json: ${{ steps.get-affected.outputs.json }}
+      affected_apps_json: ${{ steps.get-affected.outputs.affected_apps_json }}
+      affected_apps_list: ${{ steps.get-affected.outputs.affected_apps_list }}
+      build_base: ${{ steps.get-affected.outputs.build_base }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # We need the full history to compare against master's parent
         with:
-          fetch-depth: 0
+          # We need the full history (or at least 2 commits) to compare
+          fetch-depth: 0 
 
-      # --- THIS IS THE FIX ---
-      # We must install dependencies so Nx can build its project graph
-      - name: Install Dependencies
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Match your Dockerfiles
+          cache: 'npm'
+
+      - name: Install dependencies
         run: npm install
 
-      # Step 1: Check if the base image needs rebuilding
-      - name: Check base image files
-        uses: dorny/paths-filter@v2
-        id: filter
+      - name: Check for base file changes
+        id: check-base
+        uses: tj-actions/changed-files@v44
         with:
-          filters: |
-            base:
-              - 'package.json'
-              - 'package-lock.json'
-              - 'tsconfig.base.json'
-              - 'nx.json'
-              - 'Dockerfile.base'
+          files: |
+            package.json
+            package-lock.json
+            Dockerfile.base
+            nx.json
+            tsconfig.base.json
 
-      # Step 2: Get the list of affected apps using Nx
+      - name: Set base_build flag
+        id: set-base-flag
+        run: |
+          if [ "${{ steps.check-base.outputs.any_changed }}" == 'true' ]; then
+            echo "build_base=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_base=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Get affected apps
         id: get-affected
         run: |
-          # Get a JSON list of affected apps, comparing HEAD to the previous commit on master
-          # We use npx to run the locally-installed version of Nx
-          AFFECTED_LIST=$(npx nx affected:apps --base=origin/master~1 --head=HEAD --plain)
-          echo "Affected apps: $AFFECTED_LIST"
-          # Convert space-separated list to JSON array
-          JSON_LIST=$(echo "$AFFECTED_LIST" | jq -Rsc 'split(" ") | map(select(length > 0))')
-          echo "json=$JSON_LIST" >> $GITHUB_OUTPUT
+          # If base files changed, all apps are affected
+          if [ "${{ steps.set-base-flag.outputs.build_base }}" == 'true' ]; then
+            echo "Base files changed. All apps will be rebuilt."
+            AFFECTED_LIST="${{ env.ALL_APPS }}"
+          else
+            # Get list of affected apps from Nx, comparing HEAD to the commit before it
+            # This finds projects with an affected 'build' target
+            AFFECTED_LIST=$(npx nx affected --base=HEAD~1 --head=HEAD --target=build --plain --select=tasks.target.project)
+          fi
+          
+          echo "Affected apps list: $AFFECTED_LIST"
+          
+          # Convert space-separated list to a JSON array for the matrix
+          JSON_ARRAY=$(echo "$AFFECTED_LIST" | jq -Rsc 'split(" ") - [""]')
+          
+          echo "affected_apps_list=$AFFECTED_LIST" >> $GITHUB_OUTPUT
+          echo "affected_apps_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
+          echo "build_base=${{ steps.set-base-flag.outputs.build_base }}" >> $GITHUB_OUTPUT
 
-  # ----------------------------------------------------
-  # JOB 2: Build the base image (ONLY if needed)
-  # ----------------------------------------------------
+  # Job 2: Build the base image (ONLY if base files changed)
   build-base:
-    name: Build Base Image
+    name: Build and Push Base Image
     runs-on: ubuntu-latest
-    needs: check-changes
-    # This job only runs if package.json or other base files changed
-    if: ${{ needs.check-changes.outputs.build_base == 'true' }}
+    needs: [determine-affected]
+    # Only run this job if the determine-affected job said to
+    if: needs.determine-affected.outputs.build_base == 'true'
     permissions:
       contents: read
       packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+            
       - name: Build and push eshop-base
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.base
           push: true
-          no-cache: true
+          no-cache: true # As you requested
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-  # ----------------------------------------------------
-  # JOB 3: Build all affected apps IN PARALLEL
-  # ----------------------------------------------------
-  build-affected-apps:
-    name: Build ${{ matrix.app }}
+  # Job 3: Build and push images for ONLY the affected apps
+  build-and-push-affected:
+    name: Build & Push (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: [check-changes, build-base] # Needs 'build-base' to finish (even if it's skipped)
-    # This matrix is populated by the JSON output from the 'check-changes' job
-    strategy:
-      matrix:
-        app: ${{ fromJson(needs.check-changes.outputs.affected_apps_json) }}
+    needs: [determine-affected, build-base] # Depends on job 1, and job 2 (which might be skipped)
+    # This job will ONLY run if the list of affected apps is not empty
+    if: needs.determine-affected.outputs.affected_apps_list != ''
     permissions:
       contents: read
       packages: write
     
+    # Create a dynamic "matrix" of jobs from the JSON array output
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.determine-affected.outputs.affected_apps_json) }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
 
       # --- Build Frontend: user-ui ---
       - name: Build and push user-ui
-        if: ${{ matrix.app == 'user-ui' }}
+        if: matrix.app == 'user-ui'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -135,14 +167,14 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
-          no-cache: true
+          no-cache: true # As you requested
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
       # --- Build Frontend: seller-ui ---
       - name: Build and push seller-ui
-        if: ${{ matrix.app == 'seller-ui' }}
+        if: matrix.app == 'seller-ui'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -155,15 +187,15 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
-          no-cache: true
+          no-cache: true # As you requested
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-      # --- Build ALL Backend Apps ---
-      - name: Build and push backend service
-        # This step runs if the app is NOT user-ui and NOT seller-ui
-        if: ${{ matrix.app != 'user-ui' && matrix.app != 'seller-ui' }}
+      # --- Build Backend Services ---
+      - name: Build and push backend (${{ matrix.app }})
+        # This runs for any app that is NOT a frontend
+        if: matrix.app != 'user-ui' && matrix.app != 'seller-ui'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -171,19 +203,19 @@ jobs:
           build-args: |
             APP_NAME=${{ matrix.app }}
           push: true
-          no-cache: true
+          no-cache: true # As you requested
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-${{ matrix.app }}:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-  # ----------------------------------------------------
-  # JOB 4: Deploy (This job has NOT changed)
-  # ----------------------------------------------------
-  deploy:
-    name: Deploy to VM
-    # This job only runs after all parallel build jobs are successful
-    needs: build-affected-apps
+  # Job 4: Deploy ONLY the affected services to the VM
+  deploy-affected:
+    name: Deploy Affected to VM
+    needs: [determine-affected, build-and-push-affected]
+    # Only run if there was something to build and deploy
+    if: needs.determine-affected.outputs.affected_apps_list != ''
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to VM via SSH
         uses: appleboy/ssh-action@master
@@ -198,11 +230,18 @@ jobs:
             echo "Creating production .env file from GitHub Secrets..."
             echo "${{ secrets.PROD_ENV_FILE }}" > .env
             
-            echo "Pulling new images..."
-            docker compose pull
+            # --- THIS IS THE KEY OPTIMIZATION ---
+            # We pass the space-separated list of affected apps (from job 1)
+            # This tells docker compose to pull ONLY the new images
+            AFFECTED_SERVICES="${{ needs.determine-affected.outputs.affected_apps_list }}"
+
+            echo "Pulling new images for: $AFFECTED_SERVICES"
+            docker compose pull $AFFECTED_SERVICES
             
-            echo "Restarting changed services..."
-            docker compose up -d
+            # This tells docker compose to restart ONLY the specified services
+            # and any services that depend on them (which is correct)
+            echo "Restarting services: $AFFECTED_SERVICES"
+            docker compose up -d $AFFECTED_SERVICES
             
-            echo "Cleaning up old images..."
+            echo "Pruning old images"
             docker image prune -f
