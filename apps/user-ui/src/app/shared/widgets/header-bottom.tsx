@@ -65,7 +65,7 @@ const HeaderBottom = () => {
                 {/* Navigation Links */}
                 <div className='hidden md:flex items-center gap-8'>
                     {navItems.map((i, index: number) => (
-                        <Link className='font-medium text-slate-600 hover:text-blue-600 transition-all duration-200 transform hover:-translate-y-px' href={i.href} key={index}  > 
+                        <Link  className='font-medium text-slate-600 hover:text-blue-600 transition-all duration-200 transform hover:-translate-y-px' href={i.href} key={index}  > 
                             {i.title}
                         </Link>
                     ))}

@@ -64,7 +64,7 @@ const Header = () => {
   const { user, isLoading } = useUser();
   const wishlist = useStore((state: any) => state.wishlist);
   const cart = useStore((state: any) => state.cart);
-console.log(process.env.NEXT_PUBLIC_SELLER_URI_LOCAL,process.env.NODE_ENV=='production');
+// console.log(process.env.NEXT_PUBLIC_SELLER_URI_LOCAL,process.env.NODE_ENV=='production');
   return (
     <header className='w-full bg-white shadow-sm sticky top-0 z-50'>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
