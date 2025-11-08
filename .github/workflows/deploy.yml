@@ -1,159 +1,366 @@
-version: '3.8'
+name: Smart Build and Deploy E-Shop
 
-networks:
-  e-shop-network:
-    driver: bridge
+on:
+  push:
+    branches: [ master ]
 
-services:
-  
-  user-ui:
-    container_name: e-shop-user-ui
-    image: ghcr.io/sbanujsingh1400/eshop-user-ui:latest
-    env_file:
-      - ./.env       
-    ports:
-      - "3001:3001"
-    environment:
-      - PORT=3001
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
 
-  seller-ui:
-    container_name: e-shop-seller-ui
-    image: ghcr.io/sbanujsingh1400/eshop-seller-ui:latest
-    env_file:
-      - ./.env   
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-  
-  api-gateway:
-    container_name: e-shop-api-gateway
-    image: ghcr.io/sbanujsingh1400/eshop-api-gateway:latest
-    env_file:
-      - ./.env    
-    ports:
-      - "8080:8080"
-    environment:
-      - PORT=8080
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    depends_on:
-      auth-service:
-        condition: service_healthy
-      product-service:
-        condition: service_healthy
-      order-service:
-        condition: service_healthy
-      chatting-service:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.filter.outputs.base }}
+      user-ui: ${{ steps.filter.outputs.user-ui }}
+      seller-ui: ${{ steps.filter.outputs.seller-ui }}
+      api-gateway: ${{ steps.filter.outputs.api-gateway }}
+      auth-service: ${{ steps.filter.outputs.auth-service }}
+      product-service: ${{ steps.filter.outputs.product-service }}
+      order-service: ${{ steps.filter.outputs.order-service }}
+      chatting-service: ${{ steps.filter.outputs.chatting-service }}
+      kafka-service: ${{ steps.filter.outputs.kafka-service }}
+      any-backend: ${{ steps.filter.outputs.any-backend }}
+      any-frontend: ${{ steps.filter.outputs.any-frontend }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  auth-service:
-    container_name: e-shop-auth-service
-    image: ghcr.io/sbanujsingh1400/eshop-auth-service:latest
-    env_file:
-      - ./.env      
-    environment:
-      - PORT=6001
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            base:
+              - 'package*.json'
+              - 'Dockerfile.base'
+              - 'nx.json'
+              - 'tsconfig*.json'
+            
+            user-ui:
+              - 'apps/user-ui/**'
+              - 'Dockerfile.frontend'
+              - 'libs/**'
+            
+            seller-ui:
+              - 'apps/seller-ui/**'
+              - 'Dockerfile.frontend'
+              - 'libs/**'
+            
+            api-gateway:
+              - 'apps/api-gateway/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            auth-service:
+              - 'apps/auth-service/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            product-service:
+              - 'apps/product-service/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            order-service:
+              - 'apps/order-service/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            chatting-service:
+              - 'apps/chatting-service/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            kafka-service:
+              - 'apps/kafka-service/**'
+              - 'Dockerfile.backend'
+              - 'libs/**'
+            
+            any-backend:
+              - 'apps/api-gateway/**'
+              - 'apps/auth-service/**'
+              - 'apps/product-service/**'
+              - 'apps/order-service/**'
+              - 'apps/chatting-service/**'
+              - 'apps/kafka-service/**'
+              - 'Dockerfile.backend'
+            
+            any-frontend:
+              - 'apps/user-ui/**'
+              - 'apps/seller-ui/**'
+              - 'Dockerfile.frontend'
 
-  product-service:
-    container_name: e-shop-product-service
-    image: ghcr.io/sbanujsingh1400/eshop-product-service:latest
-    env_file:
-      - ./.env      
-    environment:
-      - PORT=6002
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  build-base:
+    name: Build Base Image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.base == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  order-service:
-    container_name: e-shop-order-service
-    image: ghcr.io/sbanujsingh1400/eshop-order-service:latest
-    env_file:
-      - ./.env      
-    environment:
-      - PORT=6004
-      - NODE_ENV=production
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6004/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
 
-  chatting-service:
-    container_name: e-shop-chatting-service
-    image: ghcr.io/sbanujsingh1400/eshop-chatting-service:latest
-    env_file:
-      - ./.env      
-    environment:
-      - PORT=6006
-      - NODE_ENV=production
-    ports:
-      - "6006:6006"  
-    networks:
-      - e-shop-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  kafka-service:
-    container_name: e-shop-kafka-service
-    image: ghcr.io/sbanujsingh1400/eshop-kafka-service:latest
-    env_file:
-      - ./.env      
-    networks:
-      - e-shop-network
-    restart: unless-stopped
+      - name: Build and push eshop-base
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.base
+          push: true
+          no-cache: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+
+  build-user-ui:
+    name: Build User UI
+    needs: [detect-changes, build-base]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.user-ui == 'true' || 
+       needs.detect-changes.outputs.base == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push user-ui
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          build-args: |
+            APP_NAME=user-ui
+            NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
+            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+            NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
+            NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
+          push: true
+          no-cache: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+
+  build-seller-ui:
+    name: Build Seller UI
+    needs: [detect-changes, build-base]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.seller-ui == 'true' || 
+       needs.detect-changes.outputs.base == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push seller-ui
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          build-args: |
+            APP_NAME=seller-ui
+            NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
+            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
+            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+            NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
+            NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
+          push: true
+          no-cache: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+
+  build-backend-services:
+    name: Build Backend Services
+    needs: [detect-changes, build-base]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.any-backend == 'true' || 
+       needs.detect-changes.outputs.base == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build changed backend services
+        run: |
+          SERVICES=""
+          
+          if [ "${{ needs.detect-changes.outputs.api-gateway }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES api-gateway"
+          fi
+          
+          if [ "${{ needs.detect-changes.outputs.auth-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES auth-service"
+          fi
+          
+          if [ "${{ needs.detect-changes.outputs.product-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES product-service"
+          fi
+          
+          if [ "${{ needs.detect-changes.outputs.order-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES order-service"
+          fi
+          
+          if [ "${{ needs.detect-changes.outputs.chatting-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES chatting-service"
+          fi
+          
+          if [ "${{ needs.detect-changes.outputs.kafka-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+            SERVICES="$SERVICES kafka-service"
+          fi
+          
+          echo "Building services: $SERVICES"
+          
+          for SERVICE in $SERVICES; do
+            echo "Building $SERVICE..."
+            docker buildx build \
+              --file ./Dockerfile.backend \
+              --build-arg APP_NAME=$SERVICE \
+              --tag ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-$SERVICE:latest \
+              --no-cache \
+              --push \
+              .
+          done
+
+  deploy:
+    name: Deploy Changed Services
+    needs: [detect-changes, build-user-ui, build-seller-ui, build-backend-services]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/Eshop
+            echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            git pull
+            
+            echo "Creating production .env file..."
+            echo "${{ secrets.PROD_ENV_FILE }}" > .env
+            
+            # Determine which services to update
+            SERVICES_TO_UPDATE=""
+            
+            if [ "${{ needs.detect-changes.outputs.user-ui }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE user-ui"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.seller-ui }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE seller-ui"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.api-gateway }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE api-gateway"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.auth-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE auth-service"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.product-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE product-service"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.order-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE order-service"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.chatting-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE chatting-service"
+            fi
+            
+            if [ "${{ needs.detect-changes.outputs.kafka-service }}" == "true" ] || [ "${{ needs.detect-changes.outputs.base }}" == "true" ]; then
+              SERVICES_TO_UPDATE="$SERVICES_TO_UPDATE kafka-service"
+            fi
+            
+            echo "Services to update: $SERVICES_TO_UPDATE"
+            
+            if [ -z "$SERVICES_TO_UPDATE" ]; then
+              echo "No services need updating"
+              exit 0
+            fi
+            
+            # Pull only changed services
+            for SERVICE in $SERVICES_TO_UPDATE; do
+              echo "Pulling $SERVICE..."
+              docker compose pull $SERVICE
+            done
+            
+            # Update only changed services
+            for SERVICE in $SERVICES_TO_UPDATE; do
+              echo "Updating $SERVICE..."
+              docker compose up -d --no-deps $SERVICE
+            done
+            
+            # Clean up
+            docker image prune -f
+            
+            echo "Deployment completed successfully!"

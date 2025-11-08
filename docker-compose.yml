@@ -16,11 +16,15 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
-      
     networks:
       - e-shop-network
     restart: unless-stopped
-
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   seller-ui:
     container_name: e-shop-seller-ui
@@ -35,6 +39,12 @@ services:
     networks:
       - e-shop-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
   
   api-gateway:
     container_name: e-shop-api-gateway
@@ -46,16 +56,24 @@ services:
     environment:
       - PORT=8080
       - NODE_ENV=production
-      
     networks:
       - e-shop-network
     depends_on:
-      - auth-service
-      - product-service
-      - order-service
-      - chatting-service
-      # - logger-service
+      auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      chatting-service:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   auth-service:
     container_name: e-shop-auth-service
@@ -68,6 +86,12 @@ services:
     networks:
       - e-shop-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   product-service:
     container_name: e-shop-product-service
@@ -80,6 +104,12 @@ services:
     networks:
       - e-shop-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   order-service:
     container_name: e-shop-order-service
@@ -92,6 +122,12 @@ services:
     networks:
       - e-shop-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   chatting-service:
     container_name: e-shop-chatting-service
@@ -106,6 +142,12 @@ services:
     networks:
       - e-shop-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   kafka-service:
     container_name: e-shop-kafka-service
