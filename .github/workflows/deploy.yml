@@ -1,4 +1,4 @@
-name: Build, Push, and Deploy E-Shop (Optimized v2)
+name: Build, Push, and Deploy E-Shop (Optimized v3)
 
 on:
   push:
@@ -22,17 +22,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # We need the full history (or at least 2 commits) to compare
           fetch-depth: 0 
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Match your Dockerfiles
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies (matching Dockerfile.base)
-        run: npm install --legacy-peer-deps # <-- FIX 1: Match your Dockerfile.base
+        run: npm install --legacy-peer-deps
 
       - name: Check for base file changes
         id: check-base
@@ -44,7 +43,7 @@ jobs:
             Dockerfile.base
             nx.json
             tsconfig.base.json
-            prisma/schema.prisma # <-- FIX 2: Added prisma schema as a base dependency
+            prisma/schema.prisma
 
       - name: Set base_build flag
         id: set-base-flag
@@ -58,27 +57,29 @@ jobs:
       - name: List all apps from 'apps' directory
         id: list-apps
         run: |
-          # FIX 3: Dynamically list all apps instead of using a hardcoded variable
-          ALL_APPS_LIST=$(ls -d apps/* | xargs -n 1 basename)
-          echo "Found apps: $ALL_APPS_LIST"
+          # --- THIS IS THE FIX ---
+          # List apps, then pipe to 'tr' to convert newlines to spaces
+          # 'sed' removes any trailing space
+          ALL_APPS_LIST=$(ls -d apps/* | xargs -n 1 basename | tr '\n' ' ' | sed 's/ *$//')
+          echo "Found apps (space-separated): $ALL_APPS_LIST"
           echo "all_apps_list=$ALL_APPS_LIST" >> $GITHUB_OUTPUT
           
       - name: Get affected apps
         id: get-affected
         run: |
-          # If base files changed, all apps are affected
           if [ "${{ steps.set-base-flag.outputs.build_base }}" == 'true' ]; then
             echo "Base files changed. All apps will be rebuilt."
             AFFECTED_LIST="${{ steps.list-apps.outputs.all_apps_list }}"
           else
-            # Get list of affected apps from Nx, comparing HEAD to the commit before it
-            AFFECTED_LIST=$(npx nx affected --base=HEAD~1 --head=HEAD --target=build --plain --select=tasks.target.project)
+            echo "Base files did not change. Checking Nx for affected apps..."
+            AFFECTED_LIST=$(npx nx affected --base=HEAD~1 --head=HEAD --target=build --plain --select=tasks.target.project | tr '\n' ' ' | sed 's/ *$//')
           fi
           
           echo "Affected apps list: $AFFECTED_LIST"
           
-          # Convert space-separated list to a JSON array for the matrix
+          # This jq command now correctly receives a space-separated list
           JSON_ARRAY=$(echo "$AFFECTED_LIST" | jq -Rsc 'split(" ") - [""]')
+          echo "Affected JSON: $JSON_ARRAY"
           
           echo "affected_apps_list=$AFFECTED_LIST" >> $GITHUB_OUTPUT
           echo "affected_apps_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
@@ -168,7 +169,7 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
-          no-cache: true # As you requested
+          no-cache: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
@@ -188,7 +189,7 @@ jobs:
             NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
-          no-cache: true # As you requested
+          no-cache: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
@@ -203,7 +204,7 @@ jobs:
           build-args: |
             APP_NAME=${{ matrix.app }}
           push: true
-          no-cache: true # As you requested
+          no-cache: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-${{ matrix.app }}:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
@@ -229,7 +230,7 @@ jobs:
             echo "Creating production .env file from GitHub Secrets..."
             echo "${{ secrets.PROD_ENV_FILE }}" > .env
             
-            # Get the space-separated list of affected apps from the first job
+            # This now correctly receives the space-separated list
             AFFECTED_SERVICES="${{ needs.determine-affected.outputs.affected_apps_list }}"
 
             echo "Pulling new images for: $AFFECTED_SERVICES"
