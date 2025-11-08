@@ -108,7 +108,7 @@ export const loginUser = async (
       );
     }
 
-    const user = await prisma.users.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({ where: { email },include:{avatar:true} });
     if (!user) {
       return next(new NotFoundError(`User with the email ${email} not found`));
     }
@@ -139,7 +139,7 @@ export const loginUser = async (
     console.log("____________bool in loginuser___________");
     return res.status(200).json({
       message: "User logged in successfully",
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name,avatar:user?.avatar },
     });
   } catch (error) {
     console.log(

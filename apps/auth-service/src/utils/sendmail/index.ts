@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv'
 import ejs from "ejs";
 import path from 'path'
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -19,12 +20,13 @@ const transporter = nodemailer.createTransport({
 // Render EJS Template
 
 const renderEmailTemplate = async (templateName:string,data:Record<string,any>):Promise<string>=>{
+    
+    
 
     const templatePath = path.join(
-        process.cwd(),
-        "apps",
-        "auth-service",
-        'src',
+        __dirname,
+        "..",
+        "..",
         'utils',
         'email-templates',
         `${templateName}.ejs`

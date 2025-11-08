@@ -36,7 +36,7 @@ const page = () => {
         mutationFn:async(formData:FormData)=>{
          
             const response:any = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/login-user`,formData,{withCredentials:true});
-
+     console.log('_________________loginDATA___________',response.data,'_________________loginDATA___________')
             return response.data
     
         },
