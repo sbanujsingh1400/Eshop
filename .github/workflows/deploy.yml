@@ -1,4 +1,4 @@
-name: Build, Push, and Deploy E-Shop (Optimized v3)
+name: Build, Push, and Deploy E-Shop (Optimized v4)
 
 on:
   push:
@@ -22,6 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # Fetch all history so Nx can compare the SHAs
           fetch-depth: 0 
 
       - name: Set up Node.js
@@ -44,6 +45,8 @@ jobs:
             nx.json
             tsconfig.base.json
             prisma/schema.prisma
+          # We must compare against the 'before' SHA from the push
+          base_sha: ${{ github.event.before }}
 
       - name: Set base_build flag
         id: set-base-flag
@@ -57,9 +60,6 @@ jobs:
       - name: List all apps from 'apps' directory
         id: list-apps
         run: |
-          # --- THIS IS THE FIX ---
-          # List apps, then pipe to 'tr' to convert newlines to spaces
-          # 'sed' removes any trailing space
           ALL_APPS_LIST=$(ls -d apps/* | xargs -n 1 basename | tr '\n' ' ' | sed 's/ *$//')
           echo "Found apps (space-separated): $ALL_APPS_LIST"
           echo "all_apps_list=$ALL_APPS_LIST" >> $GITHUB_OUTPUT
@@ -70,14 +70,23 @@ jobs:
           if [ "${{ steps.set-base-flag.outputs.build_base }}" == 'true' ]; then
             echo "Base files changed. All apps will be rebuilt."
             AFFECTED_LIST="${{ steps.list-apps.outputs.all_apps_list }}"
+          
+          # This is an edge case: the very first push to a new branch
+          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
+            echo "First push to a new branch. Building all apps."
+            AFFECTED_LIST="${{ steps.list-apps.outputs.all_apps_list }}"
+          
+          # --- THIS IS THE FIX ---
+          # We use the exact 'before' and 'after' SHAs from the push event.
+          # This is 100% reliable and correctly detects changes.
           else
-            echo "Base files did not change. Checking Nx for affected apps..."
-            AFFECTED_LIST=$(npx nx affected --base=HEAD~1 --head=HEAD --target=build --plain --select=tasks.target.project | tr '\n' ' ' | sed 's/ *$//')
+            echo "Base files OK. Checking Nx for affected apps between ${{ github.event.before }} and ${{ github.event.after }}"
+            AFFECTED_LIST=$(npx nx affected --base=${{ github.event.before }} --head=${{ github.event.after }} --target=build --plain --select=tasks.target.project | tr '\n' ' ' | sed 's/ *$//')
           fi
           
           echo "Affected apps list: $AFFECTED_LIST"
           
-          # This jq command now correctly receives a space-separated list
+          # Convert the space-separated list to a JSON array for the build matrix
           JSON_ARRAY=$(echo "$AFFECTED_LIST" | jq -Rsc 'split(" ") - [""]')
           echo "Affected JSON: $JSON_ARRAY"
           
@@ -97,20 +106,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
             network=host
-            
       - name: Build and push eshop-base
         uses: docker/build-push-action@v5
         with:
@@ -127,6 +133,7 @@ jobs:
     name: Build & Push (${{ matrix.app }})
     runs-on: ubuntu-latest
     needs: [determine-affected, build-base]
+    # This job will only run if the affected_apps_list is not empty
     if: needs.determine-affected.outputs.affected_apps_list != ''
     permissions:
       contents: read
@@ -135,19 +142,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The JSON array is used to create a parallel job for each affected app
         app: ${{ fromJson(needs.determine-affected.outputs.affected_apps_json) }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -213,6 +219,7 @@ jobs:
   deploy-affected:
     name: Deploy Affected to VM
     needs: [determine-affected, build-and-push-affected]
+    # This job will only run if the affected_apps_list is not empty
     if: needs.determine-affected.outputs.affected_apps_list != ''
     runs-on: ubuntu-latest
 
@@ -230,7 +237,7 @@ jobs:
             echo "Creating production .env file from GitHub Secrets..."
             echo "${{ secrets.PROD_ENV_FILE }}" > .env
             
-            # This now correctly receives the space-separated list
+            # This now correctly receives the accurate, space-separated list
             AFFECTED_SERVICES="${{ needs.determine-affected.outputs.affected_apps_list }}"
 
             echo "Pulling new images for: $AFFECTED_SERVICES"
