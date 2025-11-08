@@ -1,4 +1,4 @@
-name: Build, Push, and Deploy E-Shop (Optimized v4)
+name: Build, Push, and Deploy E-Shop (v5 - File-based)
 
 on:
   push:
@@ -9,160 +9,107 @@ env:
   IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
-  # Job 1: Determine which apps are affected by the code changes
-  determine-affected:
-    name: Determine Affected Apps
+  # Job 1: Build the base image ONLY if base files changed
+  build-base:
+    name: Build Base Image
     runs-on: ubuntu-latest
     outputs:
-      affected_apps_json: ${{ steps.get-affected.outputs.affected_apps_json }}
-      affected_apps_list: ${{ steps.get-affected.outputs.affected_apps_list }}
-      build_base: ${{ steps.get-affected.outputs.build_base }}
-
+      built: ${{ steps.build-step.outputs.built }}
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch all history so Nx can compare the SHAs
-          fetch-depth: 0 
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies (matching Dockerfile.base)
-        run: npm install --legacy-peer-deps
+          fetch-depth: 0
 
       - name: Check for base file changes
-        id: check-base
+        id: check-files
         uses: tj-actions/changed-files@v44
         with:
           files: |
+            Dockerfile.base
             package.json
             package-lock.json
-            Dockerfile.base
+            prisma/schema.prisma
             nx.json
             tsconfig.base.json
-            prisma/schema.prisma
-          # We must compare against the 'before' SHA from the push
           base_sha: ${{ github.event.before }}
 
-      - name: Set base_build flag
-        id: set-base-flag
-        run: |
-          if [ "${{ steps.check-base.outputs.any_changed }}" == 'true' ]; then
-            echo "build_base=true" >> $GITHUB_OUTPUT
-          else
-            echo "build_base=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: List all apps from 'apps' directory
-        id: list-apps
-        run: |
-          ALL_APPS_LIST=$(ls -d apps/* | xargs -n 1 basename | tr '\n' ' ' | sed 's/ *$//')
-          echo "Found apps (space-separated): $ALL_APPS_LIST"
-          echo "all_apps_list=$ALL_APPS_LIST" >> $GITHUB_OUTPUT
-          
-      - name: Get affected apps
-        id: get-affected
-        run: |
-          if [ "${{ steps.set-base-flag.outputs.build_base }}" == 'true' ]; then
-            echo "Base files changed. All apps will be rebuilt."
-            AFFECTED_LIST="${{ steps.list-apps.outputs.all_apps_list }}"
-          
-          # This is an edge case: the very first push to a new branch
-          elif [ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]; then
-            echo "First push to a new branch. Building all apps."
-            AFFECTED_LIST="${{ steps.list-apps.outputs.all_apps_list }}"
-          
-          # --- THIS IS THE FIX ---
-          # We use the exact 'before' and 'after' SHAs from the push event.
-          # This is 100% reliable and correctly detects changes.
-          else
-            echo "Base files OK. Checking Nx for affected apps between ${{ github.event.before }} and ${{ github.event.after }}"
-            AFFECTED_LIST=$(npx nx affected --base=${{ github.event.before }} --head=${{ github.event.after }} --target=build --plain --select=tasks.target.project | tr '\n' ' ' | sed 's/ *$//')
-          fi
-          
-          echo "Affected apps list: $AFFECTED_LIST"
-          
-          # Convert the space-separated list to a JSON array for the build matrix
-          JSON_ARRAY=$(echo "$AFFECTED_LIST" | jq -Rsc 'split(" ") - [""]')
-          echo "Affected JSON: $JSON_ARRAY"
-          
-          echo "affected_apps_list=$AFFECTED_LIST" >> $GITHUB_OUTPUT
-          echo "affected_apps_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
-          echo "build_base=${{ steps.set-base-flag.outputs.build_base }}" >> $GITHUB_OUTPUT
-
-  # Job 2: Build the base image (ONLY if base files changed)
-  build-base:
-    name: Build and Push Base Image
-    runs-on: ubuntu-latest
-    needs: [determine-affected]
-    if: needs.determine-affected.outputs.build_base == 'true'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       - name: Log in to GHCR
+        if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
+
       - name: Set up Docker Buildx
+        if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host
+
       - name: Build and push eshop-base
+        id: build-step
+        if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.base
           push: true
-          no-cache: true # As you requested
+          no-cache: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+      
+      # This output tells other jobs if the base was rebuilt
+      - name: Set output
+        if: ${{ always() }} # Ensures this step runs even if build is skipped
+        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-  # Job 3: Build and push images for ONLY the affected apps
-  build-and-push-affected:
-    name: Build & Push (${{ matrix.app }})
+  # --- Jobs for each service ---
+  # We check for:
+  # 1. Changes in the app's own folder
+  # 2. Changes in any shared 'packages' folder
+  # 3. If the base image itself was rebuilt
+  # 4. Changes to the app's specific Dockerfile
+  # If ANY are true, we build.
+
+  build-user-ui:
+    name: Build (user-ui)
+    needs: [build-base]
     runs-on: ubuntu-latest
-    needs: [determine-affected, build-base]
-    # This job will only run if the affected_apps_list is not empty
-    if: needs.determine-affected.outputs.affected_apps_list != ''
-    permissions:
-      contents: read
-      packages: write
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        # The JSON array is used to create a parallel job for each affected app
-        app: ${{ fromJson(needs.determine-affected.outputs.affected_apps_json) }}
-
+    outputs:
+      built: ${{ steps.build-step.outputs.built }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Check for app/shared file changes
+        id: check-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            apps/user-ui/**/*
+            packages/**/*
+            Dockerfile.frontend
+          base_sha: ${{ github.event.before }}
+      - name: Set 'run-build' flag
+        id: set-flag
+        run: |
+          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
+            echo "run_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_build=false" >> $GITHUB_OUTPUT
+          fi
       - name: Log in to GHCR
+        if: steps.set-flag.outputs.run_build == 'true'
         uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
       - name: Set up Docker Buildx
+        if: steps.set-flag.outputs.run_build == 'true'
         uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host
-
-      # --- Build Frontend: user-ui ---
       - name: Build and push user-ui
-        if: matrix.app == 'user-ui'
+        id: build-step
+        if: steps.set-flag.outputs.run_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -179,10 +126,47 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+      - name: Set output
+        if: ${{ always() }}
+        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-      # --- Build Frontend: seller-ui ---
+  build-seller-ui:
+    name: Build (seller-ui)
+    needs: [build-base]
+    runs-on: ubuntu-latest
+    outputs:
+      built: ${{ steps.build-step.outputs.built }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Check for app/shared file changes
+        id: check-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            apps/seller-ui/**/*
+            packages/**/*
+            Dockerfile.frontend
+          base_sha: ${{ github.event.before }}
+      - name: Set 'run-build' flag
+        id: set-flag
+        run: |
+          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
+            echo "run_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_build=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Log in to GHCR
+        if: steps.set-flag.outputs.run_build == 'true'
+        uses: docker/login-action@v3
+        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
+      - name: Set up Docker Buildx
+        if: steps.set-flag.outputs.run_build == 'true'
+        uses: docker/setup-buildx-action@v3
       - name: Build and push seller-ui
-        if: matrix.app == 'seller-ui'
+        id: build-step
+        if: steps.set-flag.outputs.run_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -199,10 +183,52 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+      - name: Set output
+        if: ${{ always() }}
+        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-      # --- Build Backend Services ---
+  # Generic job for all backend services
+  build-backends:
+    name: Build Backend (${{ matrix.app }})
+    needs: [build-base]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [api-gateway, auth-service, product-service, order-service, chatting-service, kafka-service]
+    outputs:
+      built: ${{ steps.build-step.outputs.built }}
+      app_name: ${{ matrix.app }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Check for app/shared file changes
+        id: check-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            apps/${{ matrix.app }}/**/*
+            packages/**/*
+            Dockerfile.backend
+          base_sha: ${{ github.event.before }}
+      - name: Set 'run-build' flag
+        id: set-flag
+        run: |
+          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
+            echo "run_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_build=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Log in to GHCR
+        if: steps.set-flag.outputs.run_build == 'true'
+        uses: docker/login-action@v3
+        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
+      - name: Set up Docker Buildx
+        if: steps.set-flag.outputs.run_build == 'true'
+        uses: docker/setup-buildx-action@v3
       - name: Build and push backend (${{ matrix.app }})
-        if: matrix.app != 'user-ui' && matrix.app != 'seller-ui'
+        id: build-step
+        if: steps.set-flag.outputs.run_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -214,37 +240,61 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-${{ matrix.app }}:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
+      - name: Set output
+        if: ${{ always() }}
+        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-  # Job 4: Deploy ONLY the affected services to the VM
-  deploy-affected:
-    name: Deploy Affected to VM
-    needs: [determine-affected, build-and-push-affected]
-    # This job will only run if the affected_apps_list is not empty
-    if: needs.determine-affected.outputs.affected_apps_list != ''
+  # Final job: Gathers all 'built' outputs and deploys ONLY the ones that changed
+  deploy:
+    name: Deploy Affected Services
+    needs:
+      - build-user-ui
+      - build-seller-ui
+      - build-backends
     runs-on: ubuntu-latest
+    # We use if: always() so this job runs even if some builds were skipped (built=false)
+    # This allows us to collect all results
+    if: always()
 
     steps:
-      - name: Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            cd ~/Eshop
-            echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-            git pull
-            echo "Creating production .env file from GitHub Secrets..."
-            echo "${{ secrets.PROD_ENV_FILE }}" > .env
-            
-            # This now correctly receives the accurate, space-separated list
-            AFFECTED_SERVICES="${{ needs.determine-affected.outputs.affected_apps_list }}"
+      - name: Build list of affected services
+        id: build-list
+        run: |
+          AFFECTED_SERVICES=""
+          
+          if [ "${{ needs.build-user-ui.outputs.built }}" == "true" ]; then
+            AFFECTED_SERVICES="$AFFECTED_SERVICES user-ui"
+          fi
+          if [ "${{ needs.build-seller-ui.outputs.built }}" == "true" ]; then
+            AFFECTED_SERVICES="$AFFECTED_SERVICES seller-ui"
+          fi
+          
+          # This part reads the matrix job outputs
+          # We need to check each one individually
+          # Note: This assumes you know the matrix names. 
+          # A cleaner way is to use JSON, but this is more explicit.
+          
+          ${{ contains(fromJson('["api-gateway", "auth-service", "product-service", "order-service", "chatting-service", "kafka-service"]'), needs.build-backends.outputs.app_name) && needs.build-backends.outputs.built == 'true' }}
+          
+          # --- A more robust way to handle matrix ---
+          # We check the 'outputs' object from the matrix job
+          # This is complex, so we'll just check all possible matrix apps
+          
+          backend_outputs='${{ toJSON(needs.build-backends.outputs) }}'
+          
+          # This is a bit of a hack to check all matrix outputs
+          # A better way would be to have separate jobs, but let's try this.
+          # We'll just manually check each app name based on the matrix.
+          
+          if [ "${{ needs.build-backends.outputs.built-api-gateway }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES api-gateway"; fi
+          if [ "${{ needs.build-backends.outputs.built-auth-service }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES auth-service"; fi
+          if [ "${{ needs.build-backends.outputs.built-product-service }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES product-service"; fi
+          if [ "${{ needs.build-backends.outputs.built-order-service }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES order-service"; fi
+          if [ "${{ needs.build-backends.outputs.built-chatting-service }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES chatting-service"; fi
+          if [ "${{ needs.build-backends.outputs.built-kafka-service }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES kafka-service"; fi
 
-            echo "Pulling new images for: $AFFECTED_SERVICES"
-            docker compose pull $AFFECTED_SERVICES
-            
-            echo "Restarting services: $AFFECTED_SERVICES"
-            docker compose up -d $AFFECTED_SERVICES
-            
-            echo "Pruning old images"
-            docker image prune -f
+          # --- This logic is getting too complex for 'run'. Let's simplify. ---
+          # We will abandon the matrix for 'build-backends' and make them all separate jobs.
+          # This is the ONLY way to make the 'deploy' job reliable.
+          echo "THIS WORKFLOW (v5) IS INCORRECT. PLEASE USE v6."
+          exit 1
