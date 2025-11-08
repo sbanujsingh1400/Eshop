@@ -12,11 +12,7 @@ href:'/shops'
 href:'/offers'
 },
 {title:"Become A Seller",
-href:  `${
-    process.env.NEXT_PUBLIC_NODE_ENVIRONMENT !== 'production'
-      ?  'http://localhost:3000/signup'
-      :  'https://eshop.seller.mypersonalproject.site/signup'
-  }`
+href:  `https://eshop.seller.mypersonalproject.site/signup`
 }
 
 ]

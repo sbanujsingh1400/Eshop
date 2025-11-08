@@ -36,8 +36,8 @@ const UserAccountNav = ({ user, isLoading }: { user: any, isLoading: boolean }) 
   if (!user) {
     return (
       <Link href="/login" className="flex items-center gap-2 font-semibold text-slate-600 hover:text-blue-600 transition-colors">
-        <LogIn strokeWidth={1.5} />
-        <span>Login</span>
+       <User /> 
+      <span>{isLoading ? '...' : "Sign In"}</span>
       </Link>
     );
   }
