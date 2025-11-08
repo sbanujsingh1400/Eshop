@@ -9,96 +9,133 @@ env:
   IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
-  # Job 1: Build the base image ONLY if base files changed
+  # 1️⃣ Build base image only if core files changed
   build-base:
-    name: Build Base Image
     runs-on: ubuntu-latest
     outputs:
       built: ${{ steps.set-output.outputs.built }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with: { fetch-depth: 0 } # 'changed-files' ke liye full history zaroori hai
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
 
-      - name: Check for base file changes
-        id: check-files
+      - id: check-files
         uses: tj-actions/changed-files@v44
         with:
-          files: | # <-- YAML syntax theek kar diya hai
+          files: |
             Dockerfile.base
             package.json
             package-lock.json
             prisma/**/*
             nx.json
             tsconfig.base.json
-          base_sha: ${{ github.event.before }}
+          base_sha: ${{ github.event.before || 'HEAD~1' }}
 
-      - name: Log in to GHCR
-        if: steps.check-files.outputs.any_changed == 'true'
+      - if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
 
-      - name: Set up Docker Buildx
-        if: steps.check-files.outputs.any_changed == 'true'
+      - if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push eshop-base
-        id: build-step
+      - id: build-step
         if: steps.check-files.outputs.any_changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.base
+          file: Dockerfile.base
           push: true
-          no-cache: true # Aapki request ke mutabik
+          no-cache: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-base:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
 
-      - name: Set output
-        id: set-output
-        if: ${{ always() }} # Yeh step hamesha chalega
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
+      - id: set-output
+        if: always()
+        run: |
+          if [ "${{ steps.build-step.outcome }}" == "success" ]; then
+            echo "built=true" >> $GITHUB_OUTPUT
+          else
+            echo "built=false" >> $GITHUB_OUTPUT
+          fi
 
-  # --- Har service ke liye alag Build Job ---
-
-  build-user-ui:
-    name: Build (user-ui)
-    needs: [build-base]
+  # 2️⃣ Template Reusable Job for Any Service
+  build-service:
+    name: Build (${{ matrix.service }})
     runs-on: ubuntu-latest
+    needs: [build-base]
     outputs:
-      built: ${{ steps.set-output.outputs.built }}
+      built: ${{ steps.out.outputs.built }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: user-ui
+            dockerfile: Dockerfile.frontend
+            type: frontend
+          - service: seller-ui
+            dockerfile: Dockerfile.frontend
+            type: frontend
+          - service: api-gateway
+            dockerfile: Dockerfile.backend
+            type: backend
+          - service: auth-service
+            dockerfile: Dockerfile.backend
+            type: backend
+          - service: product-service
+            dockerfile: Dockerfile.backend
+            type: backend
+          - service: order-service
+            dockerfile: Dockerfile.backend
+            type: backend
+          - service: chatting-service
+            dockerfile: Dockerfile.backend
+            type: backend
+          - service: kafka-service
+            dockerfile: Dockerfile.backend
+            type: backend
+
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - id: check-files
+
+      - id: check
         uses: tj-actions/changed-files@v44
         with:
           files: |
-            apps/user-ui/**/*
+            apps/${{ matrix.service }}/**/*
             packages/**/*
-            Dockerfile.frontend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
+            ${{ matrix.dockerfile }}
+          base_sha: ${{ github.event.before || 'HEAD~1' }}
+
+      - id: decide
         run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
+          if [ "${{ steps.check.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
             echo "run_build=true" >> $GITHUB_OUTPUT
           else
             echo "run_build=false" >> $GITHUB_OUTPUT
           fi
-      - if: steps.set-flag.outputs.run_build == 'true'
+
+      - if: steps.decide.outputs.run_build == 'true'
         uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - if: steps.decide.outputs.run_build == 'true'
         uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
+
+      - id: build
+        if: steps.decide.outputs.run_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.frontend
-          build-args: | # <-- YAML syntax theek kar diya hai
-            APP_NAME=user-ui
+          file: ./${{ matrix.dockerfile }}
+          build-args: |
+            APP_NAME=${{ matrix.service }}
             NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
             NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
             NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
@@ -106,363 +143,59 @@ jobs:
             NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
           push: true
           no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-user-ui:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-${{ matrix.service }}:latest
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-  build-seller-ui:
-    name: Build (seller-ui)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/seller-ui/**/*
-            packages/**/*
-            Dockerfile.frontend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
+      - id: out
+        if: always()
         run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
+          if [ "${{ steps.build.outcome }}" == "success" ]; then
+            echo "built=true" >> $GITHUB_OUTPUT
           else
-            echo "run_build=false" >> $GITHUB_OUTPUT
+            echo "built=false" >> $GITHUB_OUTPUT
           fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.frontend
-          build-args: |
-            APP_NAME=seller-ui
-            NEXT_PUBLIC_SERVER_URI=${{ vars.NEXT_PUBLIC_SERVER_URI }}
-            NEXT_PUBLIC_CHATTING_WEBSOCKET_URI=${{ vars.NEXT_PUBLIC_CHATTING_WEBSOCKET_URI }}
-            NEXT_PUBLIC_STRIPE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
-            NEXT_PUBLIC_USER_URI=${{ vars.NEXT_PUBLIC_USER_URI }}
-            NEXT_PUBLIC_SELLER_URI=${{ vars.NEXT_PUBLIC_SELLER_URI }}
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-seller-ui:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
 
-  build-api-gateway:
-    name: Build (api-gateway)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/api-gateway/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=api-gateway
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-api-gateway:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  build-auth-service:
-    name: Build (auth-service)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/auth-service/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=auth-service
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-auth-service:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  build-product-service:
-    name: Build (product-service)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/product-service/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=product-service
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-product-service:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  build-order-service:
-    name: Build (order-service)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/order-service/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=order-service
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-order-service:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  build-chatting-service:
-    name: Build (chatting-service)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/chatting-service/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=chatting-service
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-chatting-service:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  build-kafka-service:
-    name: Build (kafka-service)
-    needs: [build-base]
-    runs-on: ubuntu-latest
-    outputs:
-      built: ${{ steps.set-output.outputs.built }}
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: check-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            apps/kafka-service/**/*
-            packages/**/*
-            Dockerfile.backend
-          base_sha: ${{ github.event.before }}
-      - id: set-flag
-        run: |
-          if [ "${{ steps.check-files.outputs.any_changed }}" == "true" ] || [ "${{ needs.build-base.outputs.built }}" == "true" ]; then
-            echo "run_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "run_build=false" >> $GITHUB_OUTPUT
-          fi
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/login-action@v3
-        with: { registry: ${{ env.REGISTRY }}, username: ${{ github.actor }}, password: ${{ secrets.GHCR_PAT }} }
-      - if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/setup-buildx-action@v3
-      - id: build-step
-        if: steps.set-flag.outputs.run_build == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.backend
-          build-args: |
-            APP_NAME=kafka-service
-          push: true
-          no-cache: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/eshop-kafka-service:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.GHCR_PAT }}
-      - id: set-output
-        if: ${{ always() }}
-        run: echo "built=${{ steps.build-step.outcome == 'success' }}" >> $GITHUB_OUTPUT
-
-  # --- Final Deploy Job ---
-  
+  # 3️⃣ Deploy only what was built
   deploy:
-    name: Deploy Affected Services
-    needs:
-      - build-user-ui
-      - build-seller-ui
-      - build-api-gateway
-      - build-auth-service
-      - build-product-service
-      - build-order-service
-      - build-chatting-service
-      - build-kafka-service
+    name: Deploy Updated Containers
     runs-on: ubuntu-latest
-    if: always() # Yeh hamesha chalega taaki hum check kar sakein
-
+    needs: [build-service]
+    if: always()
     steps:
-      - name: Build list of affected services
-        id: build-list
+      - name: Aggregate Built Services
+        id: list
         run: |
-          AFFECTED_SERVICES=""
-          if [ "${{ needs.build-user-ui.outputs.built }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES user-ui"; fi
-          if [ "${{ needs.build-seller-ui.outputs.built }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES seller-ui"; fi
-          if [ "${{ needs.build-api-gateway.outputs.built }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES api-gateway"; fi
-          if [ "${{ needs.build-auth-service.outputs.built }}" == "true" ]; then AFFECTED_SERVICES="$AFFECTED_SERVICES auth-service"; fi
-          if [ "${{ needs.build-product-service
+          SERVICES=""
+          for service in user-ui seller-ui api-gateway auth-service product-service order-service chatting-service kafka-service; do
+            built=$(jq -r ".\"build-service\".matrix[$service].built" <<< '${{ toJson(needs) }}' 2>/dev/null || echo "false")
+            if [ "$built" == "true" ]; then
+              SERVICES="$SERVICES $service"
+            fi
+          done
+          SERVICES=$(echo "$SERVICES" | xargs)
+          echo "affected=$SERVICES" >> $GITHUB_OUTPUT
+          echo "Services to deploy: $SERVICES"
+
+      - name: Deploy to VM
+        if: steps.list.outputs.affected != ''
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/Eshop
+            echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            git pull
+            echo "${{ secrets.PROD_ENV_FILE }}" > .env
+
+            SERVICES="${{ steps.list.outputs.affected }}"
+            echo "Pulling updated services: $SERVICES"
+            docker compose pull $SERVICES
+            docker compose up -d $SERVICES
+            docker image prune -f
+
+      - name: Skip Message
+        if: steps.list.outputs.affected == ''
+        run: echo "✅ No service changes detected. Skipping deployment."
