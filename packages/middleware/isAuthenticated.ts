@@ -3,16 +3,12 @@ import { Response,NextFunction } from "express";
 import jwt from 'jsonwebtoken'
  const isAuthenticated =  async (req:any,res:Response,next:NextFunction)=>{
  
-    
+    console.log("____________________________________",req.url,req.subdomains,req.hostname,"________________________________________________")
     try {
-        let token;
-        if(req.url.includes('user')){
-             token = req.cookies["access_token"]  || req.headers.authorization?.split(" ")[1];
-        }else{
-            token = req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
-        }
+
         
-        
+        const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
+        console.log(req.cookies["access_token"]) 
         if(!token){
             console.log(token) 
             return res.status(401).json({message:"Unauthorized! token is missing"});}
