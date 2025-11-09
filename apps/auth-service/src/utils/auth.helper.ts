@@ -136,7 +136,7 @@ export const handleForgotPassword = async (req:Request,res:Response, next:NextFu
         try {
             
             const {email,otp} = req.body;
-             
+             console.log('***************',otp,"***************");
             if(!email || !otp ){
                 throw(new ValidationError("All Fields are required"));
             }

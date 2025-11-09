@@ -95,7 +95,7 @@ const page = () => {
                     {/* Categories */}
                     <div>
                       <h3 className='text-lg font-semibold text-slate-800' >Categories</h3>
-                      <ul className="space-y-3 pt-4">
+                      <ul className="space-y-3 pt-4 max-h-[60vh] overflow-y-auto">
                           {categories?.map((category: any,index:number) => (
                           <li key={category.label} className="flex items-center">
                               <label className="flex items-center gap-3 text-sm text-slate-600 hover:text-slate-800 cursor-pointer">
@@ -112,7 +112,7 @@ const page = () => {
                       </ul>
                     </div>
                    {/* Countries */}
-                   <div>
+                   {/* <div>
                      <h3 className='text-lg font-semibold text-slate-800 border-t border-slate-200 pt-6' >Countries</h3>
                      <ul className="space-y-3 pt-4 max-h-60 overflow-y-auto">
                         {countries?.map((country: any) => (
@@ -129,7 +129,7 @@ const page = () => {
                           </li>
                         ))}
                       </ul>
-                   </div>
+                   </div> */}
                 </aside>
 
                 {/* Shop grid */}

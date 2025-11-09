@@ -16,7 +16,7 @@ import ProductSearch from '../components/ProductSearch'
 const IconLink = ({ href, IconComponent, count }: { href: string, IconComponent: React.ElementType, count: number }) => (
   <Link href={href} className="relative flex flex-col items-center gap-1 text-slate-600 hover:text-blue-600 transition-colors">
     <IconComponent strokeWidth={1.5} />
-    {count > 0 && (
+    {count >= 0 && (
       <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
         <span className="text-white font-bold text-xs">{count}</span>
       </div>

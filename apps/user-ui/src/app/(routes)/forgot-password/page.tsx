@@ -100,7 +100,7 @@ const page = () => {
         mutationFn:async()=>{
 
             if(!userEmail)return;
-            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-forgot-password-user`,{email:userEmail,otp:otp.join()});
+            const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-forgot-password-user`,{email:userEmail,otp:otp.join('')});
            return response.data;
         },
         onSuccess:()=>{
@@ -172,7 +172,7 @@ const page = () => {
      }
 
 
- 
+ console.log(otp.join(','))
     return (
     <div className='w-full py-10 min-h-[85vh] bg-[#f1f1f1]' >
         <h1 className='text-4xl font-Poppins font-semibold text-black text-center' >Forgot Password</h1>

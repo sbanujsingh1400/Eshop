@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         {/* --- Main Footer Section (4-column grid) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8">
           
           {/* Column 1: Brand and Social */}
           <div className="md:col-span-3 lg:col-span-1">
@@ -41,7 +41,7 @@ const Footer = () => {
           </div>
           
           {/* Column 3: Information Links */}
-          <div>
+          {/* <div>
             <h3 className="text-sm font-semibold text-white tracking-wider uppercase">Information</h3>
             <ul className="mt-4 space-y-2">
               <li><Link href="#/about" className="text-sm hover:text-white transition-colors duration-200">About Us</Link></li>
@@ -49,7 +49,7 @@ const Footer = () => {
               <li><Link href="#/faq" className="text-sm hover:text-white transition-colors duration-200">FAQ</Link></li>
               <li><Link href="#/privacy-policy" className="text-sm hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Column 4: Newsletter */}
           <div>

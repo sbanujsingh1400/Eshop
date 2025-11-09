@@ -60,7 +60,7 @@ const page = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 flex flex-col gap-y-16">
         
         {/* --- Suggested Products Section --- */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm">
+        {/* <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm">
           <SectionTitle title='Suggested Products' />
           
           {isLoading && (
@@ -91,7 +91,7 @@ const page = () => {
             </p>
           )}
 
-        </div>
+        </div> */}
 
         {/* --- Latest Products Section --- */}
         <div className='bg-white p-6 sm:p-8 rounded-2xl shadow-sm' >
@@ -157,7 +157,7 @@ const page = () => {
         </div>
 
         {/* --- Offers Section --- */}
-        <div className='bg-white p-6 sm:p-8 rounded-2xl shadow-sm' >
+        {/* <div className='bg-white p-6 sm:p-8 rounded-2xl shadow-sm' >
           <SectionTitle title='Top Offers' />
           {offersLoading && (
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6 mt-6' >
@@ -184,7 +184,7 @@ const page = () => {
               There are no offers at this time.
             </p>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   )
