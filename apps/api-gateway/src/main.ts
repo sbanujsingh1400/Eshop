@@ -18,7 +18,7 @@ console.log("_________",user_uri,seller_uri,"________abc__")
 //Middlewares declaration
 console.log(user_uri,seller_uri,)
  app.use(cors({
-  origin:[user_uri,seller_uri,'http://localhost:3001'],
+  origin:[user_uri,seller_uri,'http://localhost:3001','http://localhost:3000'],
   allowedHeaders:["Authorization", "Content-Type"],
   credentials:true
  }))

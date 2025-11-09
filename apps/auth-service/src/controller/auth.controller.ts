@@ -481,8 +481,8 @@ export const createStripeConnectLink = async (
 
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
-      return_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
+      refresh_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/`,
+      return_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/`,
       type: "account_onboarding",
     });
 
@@ -817,8 +817,8 @@ export const loginAdmin = async (
     // });
 
     // 6. Clear any existing seller cookies to prevent conflicts
-    res.clearCookie("seller-access-token");
-    res.clearCookie("seller-refresh-token");
+    res.clearCookie("seller-access_token");
+    res.clearCookie("seller-refresh_token");
 
     // 7. Generate access and refresh tokens
     const accessToken = jwt.sign(

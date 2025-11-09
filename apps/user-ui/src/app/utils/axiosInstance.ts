@@ -14,7 +14,9 @@ let refreshSubscribers: (() => void)[] = [];
 // ------------------------------
 const handleLogout = () => {
   const publicPaths = ["/login", "/signup", "/forgot-password"];
+  
   const currentPath = window.location.pathname;
+  console.log(currentPath)
   const isPublicPath = 
   currentPath === "/" || 
   publicPaths.some(prefix => currentPath.startsWith(prefix));
@@ -60,7 +62,7 @@ axiosInstance.interceptors.response.use(
     const requiresAuth = originalRequest.requireAuth === true;
 
     // If 401 and request requires auth
-    if (is401 && requiresAuth && !isRetry) {
+    if (is401  && !isRetry) {
       // Handle multiple parallel requests
       if (isRefreshing) {
         return new Promise((resolve) => {
