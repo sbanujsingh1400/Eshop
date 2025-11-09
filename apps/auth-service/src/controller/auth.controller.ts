@@ -17,7 +17,7 @@ import {
 } from "../../../../packages/libs/errorMiddleware";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { setCookie } from "../utils/cookies/setCookies";
+import { deleteCookie, setCookie } from "../utils/cookies/setCookies";
 import Stripe from "stripe";
 import imagekit from "../../../../packages/libs/imageKit";
 
@@ -877,8 +877,8 @@ export const logoutUser = async (req: any, res: Response, next: NextFunction) =>
 
 try {
 
-  setCookie(res,"access_token","");
-  setCookie(res,"refresh_token","");
+  deleteCookie(res,"access_token");
+  deleteCookie(res,"refresh_token");
   return res.status(200).json({
     success:true,
     message:"Logged out user successfully"
@@ -896,8 +896,8 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
 
   try {
   
-    setCookie(res,"seller-access_token","");
-    setCookie(res,"seller-refresh_token","");
+    deleteCookie(res,"seller-access_token");
+    deleteCookie(res,"seller-refresh_token");
     return res.status(200).json({
       success:true,
       message:"Logged out seller successfully"
