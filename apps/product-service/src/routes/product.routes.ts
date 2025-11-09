@@ -29,7 +29,7 @@ router.get('/search-products-bar', searchProductsController);
 router.post('/reviews/:productId',isAuthenticated,addReviews );
 router.delete('/reviews/:reviewId',isAuthenticated,deleteReview );
 router.get("/api/dashboard",isAuthenticated, dashboardDetails);
-router.get('/reviews/:productId',isAuthenticated,getReviews);
+router.get('/reviews/:productId',getReviews);
 router.get('/get-shop/:shopId',getShopDetails);
 router.post('/shops/:shopId/reviews',createShopReview);
 

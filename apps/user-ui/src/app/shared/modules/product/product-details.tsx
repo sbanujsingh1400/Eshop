@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBag, ShoppingCartIcon, WalletMinimal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBag,BadgeCheck  } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import Zoom from 'react-medium-image-zoom';
@@ -13,7 +13,7 @@ import { useStore } from '../../../store';
 import useUser from '../../../hooks/useUser';
 import useLocationTracking from '../../../hooks/useLocationTracking';
 import useDeviceTracking from '../../../hooks/useDeviceTracking';
-import ProductCard from '../../components/Cards/product-card';
+// import ProductCard from '../../components/Cards/product-card';
 import axiosInstance from '../../../utils/axiosInstance';
 import { ProductReviews } from '../../components/ProductReviews';
 import { isProtected } from '@/app/utils/protected';
@@ -84,19 +84,19 @@ const ProductDetails = ({productDetails}:any) => {
         ((productDetails.regular_price-productDetails.sale_price)/productDetails.regular_price)*100
     )
 
-    const fetchFilteredProducts = async ()=>{
-        try {
-            const query = new URLSearchParams();
-            // console.log(query)
-            query.set("priceRange",priceRange.join(','));
-            query.set("page","1");
-            query.set("limit","5");
-            const res:any = await axiosInstance.get(`product/get-filtered-products?${query.toString()}`);
-            setRecommendedProducts(res.data.products);
-        } catch (error) {
+    // const fetchFilteredProducts = async ()=>{
+    //     try {
+    //         const query = new URLSearchParams();
+    //         // console.log(query)
+    //         query.set("priceRange",priceRange.join(','));
+    //         query.set("page","1");
+    //         query.set("limit","5");
+    //         const res:any = await axiosInstance.get(`product/get-filtered-products?${query.toString()}`);
+    //         setRecommendedProducts(res.data.products);
+    //     } catch (error) {
             
-        }
-    }
+    //     }
+    // }
 
     const fetchReviews = async () => {
         if (!productDetails?.id) return;
@@ -108,15 +108,7 @@ const ProductDetails = ({productDetails}:any) => {
           setReviews(res.data.reviews);
           setReviewCount(res.data.total);
     
-          // --- MOCK DATA FOR DEMONSTRATION (Remove this) ---
-        
-        //   const mockReviews: Review[] = [
-            
-
-        //   ];
-        //   setReviews(mockReviews);
-        //   setReviewCount(mockReviews.length);
-          // --- End of Mock Data ---
+       
         } catch (error) {
           console.error('Failed to fetch reviews', error);
         } finally {
@@ -134,10 +126,7 @@ const ProductDetails = ({productDetails}:any) => {
         }
         setIsSubmittingReview(true);
         try {
-          // --- REPLACE WITH YOUR REAL "UPSERT" API CALL ---
-          // This logic should create a new review or update an existing one
-          // based on the (userId, productId) unique constraint.
-          // console.log('Submitting review:', data,productDetails.id);
+          
           if(!isSubmittingReview){
             const res:any = await axiosInstance.post(`/product/reviews/${productDetails.id}`, {
                 ...data,
@@ -197,6 +186,8 @@ const ProductDetails = ({productDetails}:any) => {
       
        }
 
+    // console.log(productDetails)
+
   return (
     <div className='w-full bg-slate-50 py-8 lg:py-12' >
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-2xl shadow-2xl shadow-slate-200/50 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] gap-8 lg:gap-12" >
@@ -234,8 +225,8 @@ const ProductDetails = ({productDetails}:any) => {
                     {productDetails?.title}
                 </h1>
                 <div className="w-full flex items-center justify-between ">
-                    <div className='flex items-center gap-2 text-yellow-400' >
-                        <Ratings rating={productDetails?.rating} />
+                    <div  className='flex items-center gap-2 text-yellow-400' >
+                        <Ratings  rating={productDetails?.ratings} />
                         <Link href={'#reviews'} className="text-sm text-blue-600 hover:underline">
                 ({reviewCount} reviews)
               </Link>
@@ -326,8 +317,13 @@ const ProductDetails = ({productDetails}:any) => {
                 </div>
             </div>
             <div className="flex items-center text-slate-600 gap-3">
-                <WalletMinimal size={20} />
-                <span className='text-base font-semibold text-slate-800' >Warranty not available</span>
+            
+                <BadgeCheck size={20} />
+                <div>
+                <span className='text-base font-semibold text-slate-800' >Product Warranty</span>
+                  <p className="text-xs text-slate-500">{productDetails?.warranty ||'Warranty not available'}</p>
+                </div>
+                
             </div>
         </div>
 <div className="px-3 py-4">
@@ -354,7 +350,7 @@ const ProductDetails = ({productDetails}:any) => {
                 <p className='text-xs text-slate-500' >
                     Seller Rating
                 </p>
-                <p className='text-lg font-semibold text-slate-800' >88%</p>
+                <p className='text-lg font-semibold text-slate-800' >{((Number(productDetails.ratings))/5)*100}%</p>
             </div>
             <div  >
                 <p className='text-xs text-slate-500' >Chat Response</p>
@@ -420,7 +416,7 @@ const ProductDetails = ({productDetails}:any) => {
 
         </div>
       </div>
-        <div className="max-w-7xl mx-auto">
+        {/* <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 min-h-[50vh] mt-8 lg:mt-12 p-6 sm:p-8 lg:p-10">
         <h3 className='text-xl font-bold text-slate-900 border-b border-slate-200 pb-4 mb-6' >
             You May Also Like
@@ -429,7 +425,7 @@ const ProductDetails = ({productDetails}:any) => {
             {recommendedProducts?.map((i:any)=><ProductCard key={i?.id} product={i} />)}
         </div>
             </div>
-        </div>
+        </div> */}
     </div>
   )
 }
