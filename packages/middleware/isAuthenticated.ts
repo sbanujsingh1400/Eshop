@@ -13,9 +13,11 @@ import jwt from 'jsonwebtoken'
             token = req.cookies["access_token"];
         } else if (referer.includes("eshop.seller")) {
             token = req.cookies["seller-access_token"];
+        }else {
+            token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
         }
         
-        // const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
+         
         console.log(req.cookies["access_token"]) 
         if(!token){
             console.log(token) 

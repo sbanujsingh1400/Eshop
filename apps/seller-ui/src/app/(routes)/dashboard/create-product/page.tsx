@@ -1,6 +1,6 @@
 'use client'
 import React, { useMemo, useState } from 'react'
-import { ChevronRight, Wand, X, Plus } from 'lucide-react';
+import { ChevronRight, Wand, X, Plus, PlusCircle } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import ImagePlaceHolder from '../../../shared/components/image-placeholder';
 import Input from '../../../../../../../packages/components/input/index'
@@ -418,9 +418,9 @@ const page = () => {
     <SizeSelector control={control} errors={errors}  />
 </div>
 <div >
-<label className='block text-sm font-semibold text-slate-300 mb-2'>Select Discount Codes (optional)</label>
+{discountLoading?"":discountCodes.length==0?<label className='block text-sm font-semibold text-slate-300 mb-2'>No dicount code available (optional)</label>:<label className='block text-sm font-semibold text-slate-300 mb-2'>Select Discount Codes (optional)</label>}
 {discountLoading?(<p className='text-slate-400' >Loading discount codes...</p>):(<div className='flex flex-wrap gap-2' >  
-  {discountCodes?.map((code:any)=>{  return <button key={code.id} type='button' className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${watch('discountCodes')?.includes(code.id) ?"bg-blue-600 text-white border-transparent" :"bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700 hover:border-slate-500" }`}  onClick={()=>{
+  {discountCodes?.length>0?discountCodes?.map((code:any)=>{  return <button key={code.id} type='button' className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${watch('discountCodes')?.includes(code.id) ?"bg-blue-600 text-white border-transparent" :"bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700 hover:border-slate-500" }`}  onClick={()=>{
     const currentSelection = watch("discountCodes") || [] ; 
     const updatedSelection = currentSelection?.includes(code.id) ? currentSelection.filter((id:string)=>id!==code.id):[...currentSelection,code.id] ;
         setValue("discountCodes",updatedSelection);
@@ -428,7 +428,13 @@ const page = () => {
    
    {code?.public_name} ({code.discountValue}{code.discountType === "percentage" ? "%" : "$"})
 
-</button> })}
+</button> }):<button
+          type='button'
+          className='flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors mt-2'
+          onClick={() => router.push('/dashboard/discount-codes')}
+        >
+          <PlusCircle size={20} /> Add discount codes
+        </button>}
 </div>)}
 </div>
 
