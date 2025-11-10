@@ -263,7 +263,7 @@ if (slugChecking) {
      category,
      subCategory,
      colors: colors || [],
-     discount_codes: discountCodes.map((codeId: string) => codeId),
+     discount_codes: discountCodes?.map((codeId: string) => codeId)|| [],
      sizes: sizes || [],
      stock: parseInt(stock),
      sale_price: parseFloat(sale_price),
