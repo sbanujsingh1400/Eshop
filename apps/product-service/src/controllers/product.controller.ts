@@ -157,6 +157,7 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
 
    try {
         console.log('______INSIDECREATEPRODUCT_____',req.seller);
+        
       const {
          title,
          short_description,
@@ -195,7 +196,35 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
              console.log(req.body);
             return next(new ValidationError("Missing required field"))
        }
-
+       console.log({
+        title,
+        short_description,
+        detailed_description,
+        warranty,
+        cashOnDelivery: cash_on_delivery,
+        slug,
+        shopId: req.seller?.shop?.id!,
+        tags: Array.isArray(tags) ? tags : tags.split(","),
+        brand,
+        video_url,
+        category,
+        subCategory,
+        colors: colors || [],
+        discount_codes: discountCodes.map((codeId: string) => codeId),
+        sizes: sizes || [],
+        stock: parseInt(stock),
+        sale_price: parseFloat(sale_price),
+        regular_price: parseFloat(regular_price),
+        custom_properties: customProperties || {},
+        custom_specifications: custom_specifications || {},
+        images: {
+         create: images.filter((image: any) =>image && image?.file_url && image.fileId ).map((image: any) => ({
+            file_id: image.fileId,
+            url: image.file_url,
+          }))
+        }
+        
+      })
        if (!req.seller.id) {
         console.log("___________seller id not available_______________",slug,"____________________________-");
          return next(new AuthError("Only seller can create products!"));
@@ -203,11 +232,12 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
        console.log("___________slug issue_______________",slug,"____________________________-");
        const slugChecking = await prisma.products.findUnique({
          where: {
-           slug,
+           slug
          },
        });
 
   // Check if a product with the given slug already exists
+  console.log("____________PREEE SLUG CHECKING ____________________________")
 if (slugChecking) {
   console.log("____________slugChecking issue_______________",slugChecking,"____________________________-");
    return next(
@@ -215,6 +245,8 @@ if (slugChecking) {
    );
  }
  console.log("____________POST SLUG CHECKING ____________________________")
+ console.log(req.body);
+
  // If the slug is unique, create the new product
  const newProduct = await prisma.products.create({
    data: {
@@ -239,7 +271,7 @@ if (slugChecking) {
      custom_properties: customProperties || {},
      custom_specifications: custom_specifications || {},
      images: {
-      create: images.filter((image: any) =>image && image.file_url && image.fileId ).map((image: any) => ({
+      create: images.filter((image: any) =>image && image?.file_url && image.fileId ).map((image: any) => ({
          file_id: image.fileId,
          url: image.file_url,
        }))
