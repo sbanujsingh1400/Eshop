@@ -197,9 +197,10 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
        }
 
        if (!req.seller.id) {
+        console.log("___________seller id not available_______________",slug,"____________________________-");
          return next(new AuthError("Only seller can create products!"));
        }
-      //  console.log("__________________________",slug,"____________________________-");
+       console.log("___________slug issue_______________",slug,"____________________________-");
        const slugChecking = await prisma.products.findUnique({
          where: {
            slug,
@@ -208,6 +209,7 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
 
   // Check if a product with the given slug already exists
 if (slugChecking) {
+  console.log("____________slugChecking issue_______________",slugChecking,"____________________________-");
    return next(
      new ValidationError("Slug already exist! Please use a different slug!")
    );
