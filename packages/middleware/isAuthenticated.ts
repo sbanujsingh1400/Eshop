@@ -3,15 +3,15 @@ import { Response,NextFunction } from "express";
 import jwt from 'jsonwebtoken'
  const isAuthenticated =  async (req:any,res:Response,next:NextFunction)=>{
  
-    console.log("____________________________________",req.url,req.subdomains,req.hostname,"________________________________________________")
+    console.log("____________________________________",req.url,req.subdomains,req.hostname,req.headers.referer,"________________________________________________")
     try {
         let token;
-        const hostname = req.hostname;
-        
+        // const hostname = req.hostname;
+        const referer = req.headers.referer;
         // 1. Check hostname to find the correct cookie
-        if (hostname.startsWith("eshop.user")) {
+        if (referer.startsWith("eshop.user")) {
             token = req.cookies["access_token"];
-        } else if (hostname.startsWith("eshop.seller")) {
+        } else if (referer.startsWith("eshop.seller")) {
             token = req.cookies["seller-access_token"];
         }
         
