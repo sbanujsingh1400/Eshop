@@ -1,7 +1,7 @@
 import express from 'express';
 import * as path from 'path';
 import cors from 'cors';
-import proxy from  "express-http-proxy";
+import proxy, { ProxyOptions } from  "express-http-proxy";
 // import morgan from 'morgan'; 
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 // import swaggerUi from 'swagger-ui-express';
@@ -15,6 +15,14 @@ const app = express();
 const user_uri =process.env.NEXT_PUBLIC_SELLER_URI!
 const seller_uri =process.env.NEXT_PUBLIC_USER_URI!
 console.log("_________",user_uri,seller_uri,"________abc__")
+const proxyOptions: ProxyOptions = {
+  proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
+    // srcReq.hostname is correct here (e.g., "eshop.user.mypersonalproject.site")
+    // We copy it to the X-Forwarded-Host header
+    proxyReqOpts.headers['X-Forwarded-Host'] = srcReq.hostname;
+    return proxyReqOpts;
+  }
+};
 //Middlewares declaration
 console.log(user_uri,seller_uri,)
  app.use(cors({
@@ -55,10 +63,10 @@ const ORDER_URL =process.env.NODE_ENV=='production'?  process.env.ORDER_SERVICE_
 const PRODUCT_URL =process.env.NODE_ENV=='production'?  process.env.PRODUCT_SERVICE_URL:process.env.PRODUCT_SERVICE_URL_LOCAL;
 const AUTH_URL =process.env.NODE_ENV=='production'?  process.env.AUTH_SERVICE_URL:process.env.AUTH_SERVICE_URL_LOCAL;
 console.log( process.env.CHATTING_SERVICE_URL)
-app.use("/chatting", proxy(CHATTING_URL!));
-app.use("/order", proxy(ORDER_URL!)); 
-app.use("/product", proxy(PRODUCT_URL!));
-app.use("/", proxy(AUTH_URL!));
+app.use("/chatting", proxy(CHATTING_URL!,proxyOptions));
+app.use("/order", proxy(ORDER_URL!,proxyOptions)); 
+app.use("/product", proxy(PRODUCT_URL!,proxyOptions));
+app.use("/", proxy(AUTH_URL!,proxyOptions));
 
 
 

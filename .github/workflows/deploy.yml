@@ -293,7 +293,7 @@ jobs:
     
     steps:
       - name: Deploy to VM via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@post_cicd
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
