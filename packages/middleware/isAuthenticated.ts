@@ -9,9 +9,9 @@ import jwt from 'jsonwebtoken'
         // const hostname = req.hostname;
         const referer = req.headers.referer;
         // 1. Check hostname to find the correct cookie
-        if (referer.startsWith("eshop.user")) {
+        if (referer.includes("eshop.user")) {
             token = req.cookies["access_token"];
-        } else if (referer.startsWith("eshop.seller")) {
+        } else if (referer.includes("eshop.seller")) {
             token = req.cookies["seller-access_token"];
         }
         
