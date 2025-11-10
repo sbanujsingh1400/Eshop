@@ -204,13 +204,13 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
         cashOnDelivery: cash_on_delivery,
         slug,
         shopId: req.seller?.shop?.id!,
-        tags: Array.isArray(tags) ? tags : tags.split(","),
+        tags: Array.isArray(tags) ? tags : tags?.split(","),
         brand,
         video_url,
         category,
         subCategory,
         colors: colors || [],
-        discount_codes: discountCodes.map((codeId: string) => codeId),
+        discount_codes: discountCodes?.map((codeId: string) => codeId),
         sizes: sizes || [],
         stock: parseInt(stock),
         sale_price: parseFloat(sale_price),
@@ -218,9 +218,9 @@ export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
         custom_properties: customProperties || {},
         custom_specifications: custom_specifications || {},
         images: {
-         create: images.filter((image: any) =>image && image?.file_url && image.fileId ).map((image: any) => ({
-            file_id: image.fileId,
-            url: image.file_url,
+         create: images.filter((image: any) =>image && image?.file_url && image?.fileId ).map((image: any) => ({
+            file_id: image?.fileId,
+            url: image?.file_url,
           }))
         }
         
