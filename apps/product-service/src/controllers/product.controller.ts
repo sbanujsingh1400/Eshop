@@ -156,7 +156,7 @@ export const  getDiscountCodes = async (req:any,res:Response,next:NextFunction)=
 export const createProduct= async (req:any,res:Response,next:NextFunction)=>{
 
    try {
-        console.log('______INSIDECREATEPRODUCT_____');
+        console.log('______INSIDECREATEPRODUCT_____',req.seller);
       const {
          title,
          short_description,
@@ -214,7 +214,7 @@ if (slugChecking) {
      new ValidationError("Slug already exist! Please use a different slug!")
    );
  }
- 
+ console.log("____________POST SLUG CHECKING ____________________________")
  // If the slug is unique, create the new product
  const newProduct = await prisma.products.create({
    data: {
@@ -249,7 +249,7 @@ if (slugChecking) {
    include:{images:true}
  });
 
-
+console.log(newProduct)
  return res.status(201).json({success:true,newProduct})
 
 
