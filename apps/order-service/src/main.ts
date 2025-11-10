@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.get('/', (req, res) => {
   res.send({ message: 'Welcome to order-service!' });
 });
-
+app.set("trust proxy",1);
 app.use((err:any,req:any,res:any,next:any)=>errorMiddleware(err,req,res));
 const port =  6004;
 const host ='0.0.0.0'

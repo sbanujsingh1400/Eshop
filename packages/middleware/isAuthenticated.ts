@@ -3,9 +3,21 @@ import { Response,NextFunction } from "express";
 import jwt from 'jsonwebtoken'
  const isAuthenticated =  async (req:any,res:Response,next:NextFunction)=>{
  
-
+    console.log("____________________________________",req.url,req.subdomains,req.hostname,req.headers.referer,"________________________________________________")
     try {
-        const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
+        let token;
+        // const hostname = req.hostname;
+        const referer = req.headers.referer;
+        // 1. Check hostname to find the correct cookie
+        if (referer.includes("eshop.user")) {
+            token = req.cookies["access_token"];
+        } else if (referer.includes("eshop.seller")) {
+            token = req.cookies["seller-access_token"];
+        }else {
+            token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
+        }
+        
+         
         console.log(req.cookies["access_token"]) 
         if(!token){
             console.log(token) 

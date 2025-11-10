@@ -89,9 +89,16 @@ let refreshSubscribers: (() => void)[] = [];
 // handle logout and prevent infinite loops
 const handleLogout = () => {
     // console.log('inside handle logout')
-    if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-    }
+    const publicPaths = ["/login", "/signup", "/forgot-password"];
+  
+    const currentPath = window.location.pathname;
+    console.log(currentPath)
+    const isPublicPath = publicPaths.some(prefix => currentPath.startsWith(prefix));
+    if (!isPublicPath) {
+        console.log("Redirecting to login...");
+        window.location.href="/login"
+      }
+  
 }
 
 // Handle adding new access token to queued requests

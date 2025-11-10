@@ -39,12 +39,13 @@ const ShippingAddressSection = () => {
             queryClient.invalidateQueries({queryKey:['shipping-addresses']});
             reset();
             setShowModal(false);
+            
         }
     })
 
 
     const {data:addresses,isLoading}= useQuery({
-        queryKey:["shipping-address"],
+        queryKey:["shipping-addresses"],
         queryFn:async ()=>{
             const res:any = await axiosInstance.get('/shipping-addresses');
             return res.data.addresses

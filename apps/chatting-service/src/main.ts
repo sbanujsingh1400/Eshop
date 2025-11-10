@@ -10,7 +10,7 @@ const port = 6006;
 const host ='0.0.0.0'
 app.use(express.json());
 app.use(cookieParser());
-
+app.set("trust proxy",1);
 app.use('/',router)
 app.get('/api', (req, res) => {
   res.send({ message: 'Welcome to chatting-service!' });

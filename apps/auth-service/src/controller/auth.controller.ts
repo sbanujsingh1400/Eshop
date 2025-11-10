@@ -17,7 +17,7 @@ import {
 } from "../../../../packages/libs/errorMiddleware";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { setCookie } from "../utils/cookies/setCookies";
+import { deleteCookie, setCookie } from "../utils/cookies/setCookies";
 import Stripe from "stripe";
 import imagekit from "../../../../packages/libs/imageKit";
 
@@ -155,12 +155,24 @@ export const loginUser = async (
 
 // refresh token
 export const refreshToken = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
+
+    let refreshToken;
+    // const hostname = req.hostname;
+    const referer = req.headers.referer;
+    // 1. Check hostname to find the correct cookie
+    if (referer.includes("eshop.user")) {
+      refreshToken = req.cookies["access_token"];
+    } else if (referer.includes("eshop.seller")) {
+      refreshToken = req.cookies["seller-access_token"];
+    }
+    
+
+    // const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
     if (!refreshToken)
       return next(new AuthError("Unauthorized! no refresh token"));
 
@@ -481,8 +493,8 @@ export const createStripeConnectLink = async (
 
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
-      return_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/success`,
+      refresh_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/`,
+      return_url: `${process.env.NEXT_PUBLIC_SELLER_URI}/`,
       type: "account_onboarding",
     });
 
@@ -817,8 +829,8 @@ export const loginAdmin = async (
     // });
 
     // 6. Clear any existing seller cookies to prevent conflicts
-    res.clearCookie("seller-access-token");
-    res.clearCookie("seller-refresh-token");
+    res.clearCookie("seller-access_token");
+    res.clearCookie("seller-refresh_token");
 
     // 7. Generate access and refresh tokens
     const accessToken = jwt.sign(
@@ -877,8 +889,8 @@ export const logoutUser = async (req: any, res: Response, next: NextFunction) =>
 
 try {
 
-  setCookie(res,"access_token","");
-  setCookie(res,"refresh_token","");
+  deleteCookie(res,"access_token");
+  deleteCookie(res,"refresh_token");
   return res.status(200).json({
     success:true,
     message:"Logged out user successfully"
@@ -896,8 +908,8 @@ export const logoutSeller = async (req: any, res: Response, next: NextFunction) 
 
   try {
   
-    setCookie(res,"seller-access_token","");
-    setCookie(res,"seller-refresh_token","");
+    deleteCookie(res,"seller-access_token");
+    deleteCookie(res,"seller-refresh_token");
     return res.status(200).json({
       success:true,
       message:"Logged out seller successfully"
