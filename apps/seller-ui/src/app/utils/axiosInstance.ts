@@ -93,9 +93,7 @@ const handleLogout = () => {
   
     const currentPath = window.location.pathname;
     console.log(currentPath)
-    const isPublicPath = 
-    
-    publicPaths.some(prefix => currentPath.startsWith(prefix));
+    const isPublicPath = publicPaths.some(prefix => currentPath.startsWith(prefix));
     if (!isPublicPath) {
         console.log("Redirecting to login...");
         window.location.href="/login"

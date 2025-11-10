@@ -155,12 +155,24 @@ export const loginUser = async (
 
 // refresh token
 export const refreshToken = async (
-  req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
+
+    let refreshToken;
+    // const hostname = req.hostname;
+    const referer = req.headers.referer;
+    // 1. Check hostname to find the correct cookie
+    if (referer.includes("eshop.user")) {
+      refreshToken = req.cookies["access_token"];
+    } else if (referer.includes("eshop.seller")) {
+      refreshToken = req.cookies["seller-access_token"];
+    }
+    
+
+    // const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
     if (!refreshToken)
       return next(new AuthError("Unauthorized! no refresh token"));
 
