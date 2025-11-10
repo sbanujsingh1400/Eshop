@@ -720,10 +720,11 @@ export const getFilteredShops = async (
           : String(countries).split(","),
       };
     }
-
+    console.log("___filters________",filters,skip,parsedLimit,"___________")
     // 5. Execute database queries concurrently for efficiency
     const [shops, total] = await Promise.all([
       // Query to get the paginated list of shops
+      
       prisma.shops.findMany({
         where: filters,
         skip,
@@ -737,7 +738,7 @@ export const getFilteredShops = async (
       // Query to get the total count of shops matching the filters
       prisma.shops.count({ where: filters }),
     ]);
-
+    console.log("___shops total________",shops,total,"___________")
     // 6. Calculate total pages for pagination metadata
     const totalPages = Math.ceil(total / parsedLimit);
 
@@ -753,6 +754,7 @@ export const getFilteredShops = async (
 
   } catch (error) {
     // Pass any errors to the global error handler
+    console.log(error);
     return   next(error);
   }
 };
