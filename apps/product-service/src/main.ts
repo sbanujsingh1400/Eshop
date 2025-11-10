@@ -23,7 +23,7 @@ const port = process.env.PORT ? Number(process.env.PORT) : 6002;
 const app = express();
 
 app.use(cookieParser());
-
+app.set("trust proxy",1);
 
  app.use(express.json({limit:"100mb"}));
  app.use(express.urlencoded({limit:"100mb",extended:true}));
