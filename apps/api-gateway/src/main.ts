@@ -16,12 +16,7 @@ const user_uri =process.env.NEXT_PUBLIC_SELLER_URI!
 const seller_uri =process.env.NEXT_PUBLIC_USER_URI!
 console.log("_________",user_uri,seller_uri,"________abc__")
 const proxyOptions: ProxyOptions = {
-  proxyReqOptDecorator: function(proxyReqOpts, srcReq) {
-    // srcReq.hostname is correct here (e.g., "eshop.user.mypersonalproject.site")
-    // We copy it to the X-Forwarded-Host header
-    proxyReqOpts.headers['X-Forwarded-Host'] = srcReq.hostname;
-    return proxyReqOpts;
-  }
+  preserveHostHdr: true
 };
 //Middlewares declaration
 console.log(user_uri,seller_uri,)
