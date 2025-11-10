@@ -13,7 +13,7 @@ const host = process.env.HOST ?? '0.0.0.0';
 const port = process.env.PORT ? Number(process.env.PORT) : 6001;
 
 const app = express();
-app.set('subdomain offset', 2);
+app.set('trust proxy', true);
 app.use(cookieParser());
 
 

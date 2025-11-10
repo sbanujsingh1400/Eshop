@@ -5,9 +5,17 @@ import jwt from 'jsonwebtoken'
  
     console.log("____________________________________",req.url,req.subdomains,req.hostname,"________________________________________________")
     try {
-
+        let token;
+        const hostname = req.hostname;
         
-        const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
+        // 1. Check hostname to find the correct cookie
+        if (hostname.startsWith("eshop.user")) {
+            token = req.cookies["access_token"];
+        } else if (hostname.startsWith("eshop.seller")) {
+            token = req.cookies["seller-access_token"];
+        }
+        
+        // const token = req.cookies["access_token"] || req.cookies["seller-access_token"] || req.headers.authorization?.split(" ")[1];
         console.log(req.cookies["access_token"]) 
         if(!token){
             console.log(token) 
