@@ -811,6 +811,7 @@ export const searchProducts = async (
 
   } catch (error) {
     // Pass any errors to the global error handler
+    console.log(error);
     return  next(error);
   }
 };

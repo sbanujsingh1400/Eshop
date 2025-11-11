@@ -76,7 +76,7 @@ useEffect(()=>{
              </Link>
 
              <div className='mt-2' >
-                <Ratings rating={product?.ratings} />
+                <Ratings rating={product?.ratings || 0} />
              </div>
              
              <div className="mt-auto pt-3 flex justify-between items-center border-t border-slate-200/80">

@@ -108,11 +108,16 @@ const page = () => {
      const onSubmit = async (data:any)=>{
         try {
             setLoading(true);
-          const res=  await axiosInstance.post("/product/create-product",data);
+          const res:any=  await axiosInstance.post("/product/create-product",data);
 
-          if(res)  router.push('/dashboard/all-products')
+          if(res){
+              router.push('/dashboard/all-products')
+              toast.success('Product created successfully');   
+            }
         } catch (error:any) {
-           toast.error(error?.data?.message)   
+
+            // console.log(error?.response?.data?.message);
+           toast.error(error?.response?.data?.message || "some error occured while creating product! ")   
         } finally{
             setLoading(false)
         }
@@ -200,6 +205,7 @@ const page = () => {
             // toast.promise automatically handles showing the error toast.
             // You can still log the detailed error for debugging if you want.
             console.error("Upload failed:", error);
+            toast.error("Upload failed:  "+error)
         } finally {
             // The local placeholder loader can still be turned off here.
             setPictureUploadingLoader(false);

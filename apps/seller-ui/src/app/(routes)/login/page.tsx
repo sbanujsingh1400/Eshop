@@ -7,6 +7,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 //@ts-ignore
 import axios,{ AxiosError }  from 'axios';
+import toast from 'react-hot-toast';
 
 type FormData = {
     email:string,
@@ -40,11 +41,15 @@ const page = () => {
         onSuccess:(data)=>{
             setServerError(null);
             router.push('/dashboard');
+            toast.success('Seller sucessfully logged in');
             queryClient.invalidateQueries({ queryKey:["seller"] });
+            
         },
         onError:(error:any)=>{
-            const errorMessage = (error.message?.data as {message?:string})?.message || "Invalid Credentials";
+            const errorMessage = (error?.response?.data as {message?:string})?.message || "Invalid Credentials";
             setServerError(errorMessage)
+            console.log(error);
+            toast.error(error.response.data.message)
         }
     })
 

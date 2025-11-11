@@ -29,7 +29,38 @@ export default function RootLayout({
     <html lang="en">
       <body className={`min-h-screen bg-slate-900 font-sans antialiased ${poppins.variable}`} >
         <Providers>
-          <Toaster />
+        <Toaster
+  
+  toastOptions={{
+    duration: 3000,
+
+    // 🔥 The new style
+    style: {
+      borderRadius: '8px',
+      // Sampled from the darkest part of your background
+      background: '#1A434A', 
+      color: '#FFFFFF', // White text
+      padding: '16px',
+      // A subtle border to lift it off the page
+      border: '1px solid rgba(255, 255, 255, 0.2)', 
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)', // A slightly stronger shadow
+    },
+
+    // 🎨 For this design, we ONLY change the icon color, not the background
+    success: {
+      iconTheme: {
+        primary: '#28a745', // Bright green icon
+        secondary: '#FFFFFF',
+      },
+    },
+    error: {
+      iconTheme: {
+        primary: '#dc3545', // Bright red icon
+        secondary: '#FFFFFF',
+      },
+    },
+  }}
+/>
      {children}
         
         </Providers>

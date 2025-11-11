@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 //@ts-ignore
 import axios,{ AxiosError }  from 'axios';
 import axiosInstance from '@/app/utils/axiosInstance';
+import toast from 'react-hot-toast';
 
 type FormData = {
     email:string,
@@ -45,10 +46,13 @@ const page = () => {
             console.log(data);
             queryClient.setQueryData(['user'], data.user);
             router.push('/');
+            toast.success(`${data?.user?.name ||'user'} logged in successfully`)
         },
         onError:(error:any)=>{
             const errorMessage = (error.message?.data as {message?:string})?.message || "Invalid Credentials";
             setServerError(errorMessage)
+    //    console.log(error.response.data.message);
+       toast.error(error.response.data.message)
         }
     })
 
