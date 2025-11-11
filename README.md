@@ -2,7 +2,7 @@
 
 Welcome to **Eshop**, a modern, full-stack e-commerce platform built with a microservices architecture. This project uses an Nx monorepo to manage a distributed system, including separate frontends for users and sellers, and a suite of backend services for handling everything from authentication to real-time chat.
 
-## ✨ Features
+##  Features
 
 - **Monorepo Structure**: Managed with Nx for streamlined, scalable development and shared code.
 - **Microservices Architecture**: Decoupled services for auth, products, orders, and chat.
@@ -18,7 +18,7 @@ Welcome to **Eshop**, a modern, full-stack e-commerce platform built with a micr
 - **CI/CD**: Includes a GitHub Actions workflow (`deploy.yml`) for automated deployment.
 - **AI Enhancements**: The seller dashboard includes utilities for AI-powered features (e.g., `Ai.enhancement.ts`).
 
-## 🏗️ Architecture Overview
+##  Architecture Overview
 
 This project is designed as a distributed system. The `apps/` directory contains all the runnable applications (frontends and microservices), while the `packages/` directory contains shared code (like components, middleware, and library clients).
 
@@ -31,7 +31,7 @@ This project is designed as a distributed system. The `apps/` directory contains
 5. For asynchronous tasks (like sending analytics or generating a report), the service publishes an event to a Kafka topic.
 6. The `kafka-service` (or another interested service) consumes this event and processes it independently.
 
-## 🚀 Technology Stack
+##  Technology Stack
 
 | Category       | Technology              | Description                                                      |
 |----------------|-------------------------|------------------------------------------------------------------|
@@ -51,7 +51,7 @@ This project is designed as a distributed system. The `apps/` directory contains
 |                | GitHub Actions          | For continuous integration and deployment (CI/CD).               |
 | **File Storage** | ImageKit              | (`packages/libs/imageKit`) For image and media management.       |
 
-## 📂 Project Structure
+##  Project Structure
 
 Here is a high-level overview of the monorepo structure:
 
@@ -86,7 +86,7 @@ Here is a high-level overview of the monorepo structure:
 └── package.json          # Root dependencies
 ```
 
-## 🏁 Getting Started
+##  Getting Started
 
 Follow these instructions to get the entire platform up and running on your local machine.
 
@@ -171,7 +171,7 @@ Your applications should now be running (ports may vary based on your configurat
 
 - **User UI**: http://localhost:3000
 - **Seller UI**: http://localhost:3001
-- **API Gateway**: http://localhost:8000
+- **API Gateway**: http://localhost:8080
 
 ### Development with Nx (Without Docker)
 
@@ -190,8 +190,7 @@ npx nx test auth-service
 
 ## 📄 License
 
-This project is open-source. (You can add your preferred license, e.g., MIT License, here.)
+NA
 
 ---
 
-**Happy coding! 🚀**
