@@ -1,144 +1,47 @@
-# EShop
-changes here
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+Eshop - Full-Stack Microservices E-commerce PlatformWelcome to Eshop, a modern, full-stack e-commerce platform built with a microservices architecture. This project uses an Nx monorepo to manage a distributed system, including separate frontends for users and sellers, and a suite of backend services for handling everything from authentication to real-time chat.✨ FeaturesMonorepo Structure: Managed with Nx for streamlined, scalable development and shared code.Microservices Architecture: Decoupled services for auth, products, orders, and chat.Dual Frontend:User UI (user-ui): A Next.js app for customers to browse, shop, and manage their accounts.Seller UI (seller-ui): A Next.js app for sellers to manage products, view orders, and see analytics.API Gateway: A single, unified entry point (api-gateway) for all frontend requests, which then routes to the appropriate microservice.Async Communication: Kafka (kafka-service) is used for event-driven communication and analytics, ensuring services are loosely coupled.Real-time Chat: WebSocket-based chat (chatting-service) for live communication between users and sellers.Modern Database: Uses Prisma as a next-generation ORM for type-safe database access (likely with PostgreSQL).Caching: Redis is integrated for high-performance caching and session management.Containerized: Fully containerized with Docker and orchestrated with Docker Compose for easy setup and deployment.CI/CD: Includes a GitHub Actions workflow (deploy.yml) for automated deployment.AI Enhancements: The seller dashboard includes utilities for AI-powered features (e.g., Ai.enhancement.ts).🏗️ Architecture OverviewThis project is designed as a distributed system. The apps/ directory contains all the runnable applications (frontends and microservices), while the packages/ directory contains shared code (like components, middleware, and library clients).Flow of a Request:A user (in user-ui) or seller (in seller-ui) performs an action.The Next.js frontend sends an API request to the API Gateway (api-gateway).The API Gateway verifies the request (often using middleware from packages/middleware) and forwards it to the correct backend service (e.g., product-service).The service performs its business logic, communicating with the Prisma client (packages/libs/prisma) and Redis (packages/libs/redis).For asynchronous tasks (like sending analytics or generating a report), the service publishes an event to a Kafka topic.The kafka-service (or another interested service) consumes this event and processes it independently.🚀 Technology StackCategoryTechnologyDescriptionMonorepoNxFor managing the monorepo, tasks, and dependencies.FrontendNext.js (App Router)For server-side rendering (SSR) and static site generation (SSG).ReactFor building the user interfaces.TypeScriptFor type-safe frontend and backend code.Tailwind CSSFor utility-first styling.BackendNode.jsAs the runtime environment for all services.Express.js (implied)As the framework for building the microservices.WebSocketsFor the chatting-service.DatabasePrismaNext-gen ORM for database access.PostgreSQL (implied)The likely SQL database used by Prisma.CachingRedisFor caching, sessions, and message brokering.MessagingKafkaFor a distributed, event-driven message queue.DevOpsDocker & Docker ComposeFor containerization and local orchestration.GitHub ActionsFor continuous integration and deployment (CI/CD).File StorageImageKit(packages/libs/imageKit) For image and media management.📂 Project StructureHere is a high-level overview of the monorepo structure:/
+├── apps/
+│   ├── api-gateway/      # Single entry point for all API requests
+│   ├── auth-service/     # Manages user/seller authentication, JWTs, and emails
+│   ├── chatting-service/ # Real-time WebSocket chat server
+│   ├── kafka-service/    # Consumes and processes Kafka events (e.g., analytics)
+│   ├── order-service/    # Manages order creation, history, and confirmation emails
+│   ├── product-service/  # Manages products, shops, reviews, and cron jobs
+│   ├── seller-ui/        # Next.js frontend for the seller dashboard
+│   └── user-ui/          # Next.js frontend for the customer-facing shop
+│
+├── packages/
+│   ├── components/       # Shared React components (Input, ColorSelector, etc.)
+│   ├── error_handler/    # Shared error handling middleware
+│   ├── kafka/            # Shared Kafka producer/consumer configurations
+│   ├── libs/             # Shared clients for Prisma, Redis, and ImageKit
+│   ├── logs/             # Shared logging utility
+│   └── middleware/       # Shared auth middleware (e.g., isAuthenticated)
+│
+├── prisma/
+│   └── schema.prisma     # The single source of truth for the database schema
+│
+├── .github/workflows/    # CI/CD pipelines
+├── Dockerfile.backend    # Docker build definitions
+├── Dockerfile.frontend
+├── docker-compose.yml    # Orchestrates all services for development
+├── nx.json               # Nx workspace configuration
+└── package.json          # Root dependencies
+🏁 Getting StartedFollow these instructions to get the entire platform up and running on your local machine.PrerequisitesNode.js (v18 or later)Docker and Docker ComposeNx CLI (Install globally: npm install -g nx)1. InstallationClone the repository and install the root dependencies:git clone [https://github.com/sbanujsingh1400/eshop.git](https://github.com/sbanujsingh1400/eshop.git)
+cd eshop
+npm install
+2. Environment ConfigurationThis project requires several environment variables for database connections, API keys, and service-to-service communication.Create a .env file at the root of the project. You will need to add variables for:DATABASE_URL (for Prisma, e.g., postgresql://user:password@localhost:5432/eshop)REDIS_HOST and REDIS_PORTKAFKA_BROKERSJWT_SECRETIMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_URL_ENDPOINT...and any other keys used by the services (e.g., email provider keys).(Note: You may need to create .env files within each service in apps/ or manage this through a single root file, depending on how the docker-compose.yml is configured to inject them.)3. Build Docker ImagesBefore running, build all the necessary images using Docker Compose. This will read the docker-compose.yml file and build all the services defined within it.docker-compose build
+4. Initialize the DatabaseThe database needs to be running, and the schema needs to be applied.Start the database service (and other core services like Kafka/Redis):# Check your docker-compose.yml for service names (e.g., db, postgres)
+docker-compose up -d db kafka redis
+Apply the Prisma schema:npx prisma db push
+Generate the Prisma Client:npx prisma generate
+5. Run the PlatformOnce the images are built and the database is ready, you can start the entire platform.docker-compose up -d
+This will start all services in detached mode. You can view logs for all services or a specific service:docker-compose logs -f           # All services
+docker-compose logs -f user-ui   # Just the user-ui service
+Your applications should now be running (ports may vary based on your configuration):User UI: http://localhost:3000Seller UI: http://localhost:3001API Gateway: http://localhost:8000Development with Nx (Without Docker)If you prefer to run services individually for development (e.g., against a shared Docker DB), you can use the Nx CLI.# Serve the user-ui
+npx nx serve user-ui
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+# Serve the api-gateway
+npx nx serve api-gateway
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Finish your CI setup
-
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/jnR6UsqhZj)
-
-
-## Run tasks
-
-To run the dev server for your app, use:
-
-```sh
-npx nx serve auth-service
-```
-
-To create a production bundle:
-
-```sh
-npx nx build auth-service
-```
-
-To see all available targets to run for a project, run:
-
-```sh
-npx nx show project auth-service
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/node:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/node:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-
-
-
-server {
-    listen 80;
-    server_name 210.79.129.107;
-
-    # Route for your API Gateway
-    location /api/ {
-        proxy_pass http://localhost:8080/; # Forward to your api-gateway container
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    # Route for your Chatting WebSocket
-    location /ws/ {
-        proxy_pass http://localhost:6006/; # Forward to your chatting-service
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade; # Essential for WebSockets
-        proxy_set_header Connection "Upgrade"; # Essential for WebSockets
-        proxy_set_header Host $host;
-    }
-
-    # Route for your Seller UI (at /seller)
-  # Seller UI
-location ^~ /seller {
-    proxy_pass http://localhost:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_cache_bypass $http_upgrade;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-    # ✅ Fix static assets (Next.js _next folder)
-    location ~* ^/seller/_next/(.*)$ {
-        proxy_pass http://localhost:3000/seller/_next/$1;
-        proxy_set_header Host $host;
-    }
-
-    # ✅ Fix static media (images, fonts, etc.)
-    location ~* ^/seller/(.*)\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg)$ {
-        proxy_pass http://localhost:3000/seller/$1.$2;
-        proxy_set_header Host $host;
-    }
-}
-
-    # Route for your User UI (at the root)
-    location / {
-        proxy_pass http://localhost:3001; # Forward to your user-ui container
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
+# Run tests for the auth-service
+npx nx test auth-service
