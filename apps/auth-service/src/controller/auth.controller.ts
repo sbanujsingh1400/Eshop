@@ -173,16 +173,14 @@ export const refreshToken = async (
     
 
     // const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
-    if (!refreshToken)
-      return next(new ValidationError("Unauthorized! no refresh token"));
+    if (!refreshToken)return next(new ValidationError("Unauthorized! no refresh token"));
 
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET as string
     ) as { id: string; role: string };
 
-    if (!decoded || !decoded.id || !decoded.role)
-      return next(new ValidationError("Invalid refresh token"));
+    if (!decoded || !decoded.id || !decoded.role)return next(new ValidationError("Invalid refresh token"));
 
       
 if(decoded.role=='user'){
@@ -205,7 +203,11 @@ if(decoded.role=='user'){
   if(decoded.role==='user')  setCookie(res, "access_token", newAccessToken);
   else setCookie(res, "seller-access_token", newAccessToken);
     return res.status(201).json({ success: true });
-  } catch (error) {}
+  } catch (error:any) {
+
+    console.log(error);
+    return next(new ValidationError(error));
+  }
 };
 
 // get logged in user
