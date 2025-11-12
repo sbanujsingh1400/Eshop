@@ -174,7 +174,7 @@ export const refreshToken = async (
 
     // const refreshToken = req.cookies["refresh_token"]||req.cookies["seller-refresh_token"] || req.headers.authorization?.split(" ")[1];
     if (!refreshToken)
-      return next(new AuthError("Unauthorized! no refresh token"));
+      return next(new ValidationError("Unauthorized! no refresh token"));
 
     const decoded = jwt.verify(
       refreshToken,
