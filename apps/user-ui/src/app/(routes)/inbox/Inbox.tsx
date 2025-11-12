@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Loader2, MessageSquare } from 'lucide-react'; // Example icon for empty state
 
 const page = () => {
@@ -32,6 +32,8 @@ const [hasMore, setHasMore] = useState(false);
 const [page, setPage] = useState(1);
 const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 const {ws,unreadCounts}:any= useWebSocket();
+const [isLoadingMore, setIsLoadingMore] = useState(false);
+const prevScrollHeightRef = useRef<number | null>(null);
 
 const [conversationId,setConversationId] = useState(searchParams.get("conversationId"));
 
@@ -61,10 +63,17 @@ const {data:conversations,isLoading}= useQuery({
     }
 })
 
-
 useEffect(()=>{
-    if(messages?.length>0)scrollToBottom();
-},[messages]);
+  // Only scroll to bottom if we are NOT loading previous messages
+  if(messages?.length>0 && !isLoadingMore) {
+    scrollToBottom();
+  }
+},[messages, isLoadingMore]); // <-- Added isLoadingMore
+
+
+// useEffect(()=>{
+//     if(messages?.length>0)scrollToBottom();
+// },[messages]);
 
 
 useEffect(()=>{
@@ -122,6 +131,8 @@ return chat.lastMessage || "";
 }
 
 const loadMoreMessages = async ()=>{
+  if (!messageContainerRef.current) return;
+  setIsLoadingMore(true);
     const nextPage = page+1;
     const res:any = await axiosInstance.get(`/chatting/get-messages/${conversationId}?page=${nextPage}`,isProtected);
     queryClient.setQueryData(["messages",conversationId],(old:any=[])=>[...res.data.messages.reverse(),...old]);
@@ -129,11 +140,40 @@ const loadMoreMessages = async ()=>{
     setHasMore(res?.data?.hasMore);
 }
 
+// const scrollToBottom = ()=>{
+//     requestAnimationFrame(()=>{
+//        if(messageContainerRef)setTimeout(()=>{ messageContainerRef.current?.scrollIntoView({behavior:"smooth"})},0);
+//     })
+// }
+
 const scrollToBottom = ()=>{
-    requestAnimationFrame(()=>{
-       setTimeout(()=>{ scrollAnchorRef.current?.scrollIntoView({behavior:"smooth"})},0);
-    })
+  requestAnimationFrame(()=>{
+   
+     setTimeout(()=>{ 
+       
+        if(scrollAnchorRef.current){
+          scrollAnchorRef.current.scrollIntoView({ behavior: "smooth" })
+        }
+      }, 0);
+  })
 }
+useLayoutEffect(() => {
+  if (isLoadingMore && prevScrollHeightRef.current !== null && messageContainerRef.current) {
+      
+      // --- We just loaded more messages ---
+      const newScrollHeight = messageContainerRef.current.scrollHeight;
+      
+      // Calculate the difference in height
+      const scrollOffset = newScrollHeight - prevScrollHeightRef.current;
+      
+      // Restore the scroll position by adding the offset
+      messageContainerRef.current.scrollTop = scrollOffset; 
+      
+      // Reset the flags
+      prevScrollHeightRef.current = null;
+      setIsLoadingMore(false);
+  }
+}, [messages, isLoadingMore]); // Runs when messages update *if* we are loading
 
 const handleSend = async (e:any)=>{
     e.preventDefault();
@@ -187,9 +227,9 @@ if (isUserLoading) {
 
   return (
     <div className='w-full bg-white' >
-        <div className="max-w-7xl mx-auto py-8">
+        <div className="max-w-7xl mx-auto py-8 ">
 
-  <div className='flex h-[calc(100vh-12rem)] border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden' >
+  <div className='flex h-[calc(100vh-35rem)] border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden' >
 
     <div className='w-full max-w-xs border-r border-slate-200 bg-slate-50 flex flex-col' >
         <div className='p-4 border-b border-slate-200 text-lg font-bold text-slate-800 flex-shrink-0' >

@@ -149,7 +149,10 @@ const loadMoreMessages = async ()=>{
 
 const scrollToBottom = ()=>{
     requestAnimationFrame(()=>{
-       setTimeout(()=>{ scrollAnchorRef.current?.scrollIntoView({behavior:"smooth"})},0);
+      //  setTimeout(()=>{ scrollAnchorRef.current?.scrollIntoView({behavior:"smooth"})},0);
+      if (messageContainerRef.current) {
+        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      }
     })
 }
 
@@ -291,13 +294,14 @@ if (userLoading) {
         </div>
         {/* Messages */}
         <div ref={messageContainerRef} className='flex-1 overflow-y-auto px-6 py-6 space-y-4 text-sm' >
-        <div ref={scrollAnchorRef} />
+        <div />
             {hasMore && (<div className='flex justify-center mb-2' >
                 <button 
                 onClick={loadMoreMessages} 
                 className='text-xs px-4 py-1 text-gray-800 rounded-xl bg-gray-200 hover:bg-gray-300'  >Load previous messages</button>
             </div>)}
             {messages?.map((msg:any,index:number)=>(<div key={index} className={`flex flex-col ${msg.senderType==="seller"?"items-end ml-auto":"items-start"} max-w-[80%]`} >
+            {/* {message.length-1==index && <div className='w-[100vw] h-[10vh] bg-pink-300' ref={scrollAnchorRef}></div>} */}
                 <div className={`${
   msg.senderType === "user"
     ? "bg-blue-600 text-black"
