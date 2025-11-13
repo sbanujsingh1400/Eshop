@@ -1313,9 +1313,9 @@ prisma.reviews.findMany({
       totalVisitors: visitorCount || 0, // Use result from transaction
       averageRating: shopDetails?.ratings || 0, // Use result from transaction
     };
-//     console.log('_________________________________________________')
-// console.log(shopDetails)
-// console.log('_________________________________________________')
+    console.log('_________________________________________________')
+console.log(shopDetails)
+console.log('_________________________________________________')
     // Process Order Status (FIXED safe access)
    // Process Order Status (FIXED safe access)
 const orderStatus = orderStatusGroup.map(group => ({
