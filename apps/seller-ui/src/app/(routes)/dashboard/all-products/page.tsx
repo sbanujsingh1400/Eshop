@@ -110,7 +110,7 @@ const ProductList = () => {
     header: "Rating",
     cell: ({ row }: any) => <div className='flex items-center gap-1 text-yellow-400' >
         <Star fill='#facc15' size={18} className="text-yellow-400" />
-        <span className='text-slate-300' > {row.original.rating || 5} </span>
+        <span className='text-slate-300' > {row.original.ratings || 0} </span>
       </div>
   },{
     header: "Actions",
