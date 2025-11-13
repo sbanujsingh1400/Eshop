@@ -243,7 +243,7 @@ if (isUserLoading) {
             return <button onClick={() => handleChatSelect(chat)} key={chat.conversationId} className={`w-full text-left px-4 py-3 transition-colors flex items-center gap-3 ${isActive ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
             <div className="relative flex-shrink-0">
                 <Image 
-                    src={chat?.seller?.avatar?.[0] || 'https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032'} 
+                    src={chat?.seller?.avatar?.[0] || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740'} 
                     alt={chat?.seller?.name}
                     width={40}
                     height={40}
@@ -276,7 +276,7 @@ if (isUserLoading) {
     <div className="flex flex-col flex-1 bg-white">
         {selectedChat ? (<>
         <div className="p-3 border-b border-slate-200 bg-white flex items-center gap-3 flex-shrink-0 shadow-sm">
-            <Image src={selectedChat?.seller?.avatar[0] || "https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032"} alt={selectedChat.seller.name} width={40} height={40} className='rounded-full w-10 h-10 object-cover' />
+            <Image src={selectedChat?.seller?.avatar[0] || "https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740"} alt={selectedChat.seller.name} width={40} height={40} className='rounded-full w-10 h-10 object-cover' />
             <div>
               <h2 className='text-slate-800 font-semibold text-base' >{selectedChat.seller.name}</h2>
               <p className='text-xs text-slate-500' >{selectedChat.seller?.isOnline?"Online":"Offline"}</p>

@@ -116,7 +116,7 @@ const SellerProfile = ({ shop, followersCount }: SellerProfileProps) => {
         <Image
           src={
             shop?.coverBanner ||
-            "https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032"
+            "https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740"
           }
           alt="Seller Cover"
           className="w-full h-[400px] object-cover"
@@ -134,7 +134,7 @@ const SellerProfile = ({ shop, followersCount }: SellerProfileProps) => {
               <Image
                 src={
                   shop?.avatar ||
-                  "https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032"
+                  "https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740"
                 }
                 alt="Seller Avatar"
                 layout="fill"

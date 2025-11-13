@@ -27,7 +27,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         <Image
           src={
             shop?.coverBanner ||
-            'https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032'
+            'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740'
           }
           alt='Cover'
           layout='fill'

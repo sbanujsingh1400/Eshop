@@ -1,5 +1,5 @@
 import express,{ Router } from "express";
-import { addReviews, createDiscountCode, createProduct, createShopReview, dashboardDetails, deleteDiscountCode, deleteProduct, deleteProductImage, deleteReview, fetchHeroSectionDetails, getAllEvents, getAllProduct, getCategories, getDiscountCodes, getFilteredEvents, getFilteredProducts, getFilteredShops, getProduct, getProductDetails, getReviews, getShopDetails, getStripeAccount, restoreProduct, searchProducts, searchProductsController, topShops, uploadProductImage } from "../controllers/product.controller";
+import { addReviews, addUniqueShopVisitors, createDiscountCode, createProduct, createShopReview, dashboardDetails, deleteDiscountCode, deleteProduct, deleteProductImage, deleteReview, fetchHeroSectionDetails, getAllEvents, getAllProduct, getCategories, getDiscountCodes, getFilteredEvents, getFilteredProducts, getFilteredShops, getProduct, getProductDetails, getReviews, getShopDetails, getStripeAccount, restoreProduct, searchProducts, searchProductsController, topShops, uploadProductImage } from "../controllers/product.controller";
 import isAuthenticated from "../../../../packages/middleware/isAuthenticated";
 import { isSeller } from "../../../../packages/middleware/authorizeRoles";
 
@@ -32,6 +32,7 @@ router.get("/api/dashboard",isAuthenticated, dashboardDetails);
 router.get('/reviews/:productId',getReviews);
 router.get('/get-shop/:shopId',getShopDetails);
 router.post('/shops/:shopId/reviews',createShopReview);
+router.post('/addUniqueShopVisitors',addUniqueShopVisitors)
 
 
 export default router

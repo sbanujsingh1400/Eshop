@@ -28,7 +28,7 @@ const page = () => {
     const searchParams = useSearchParams();
     const queryTab = searchParams.get('active') || "Profile"
     const [activeTab,setActiveTab]= useState(queryTab)
-    const [profilePic,setProfilePic]= useState<string>((user?.avatar && user?.avatar[0]?.url) || 'https://ik.imagekit.io/sbanujsingh/products/product-1759752532938_5xZEInFAX?updatedAt=1759752534342' )
+    const [profilePic,setProfilePic]= useState<string>((user?.avatar && user?.avatar[0]?.url) || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740' )
     
     const [totalOrder, setTotalOrder] = useState<number>(0);
     const [processingOrders, setProcessingOrders] = useState<number>(0);

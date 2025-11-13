@@ -244,7 +244,7 @@ if (userLoading) {
             {/* Avatar and Online Status */}
             <div className="relative flex-shrink-0">
               <Image
-                src={ chat.user?.avatar?.[0]?.url || 'https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032' }
+                src={ chat.user?.avatar?.[0]?.url || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740' }
                 alt={chat?.user?.name}
                 width={40} // Consistent width/height
                 height={40}
@@ -286,7 +286,7 @@ if (userLoading) {
         {selectedChat ? (<>
         {/* Header */}
         <div className="p-4 border-b border-b-gray-800 bg-gray-900 flex items-center gap-3 ">
-            <Image src={selectedChat?.user?.avatar[0].url || "https://ik.imagekit.io/sbanujsingh/products/product-1759764430247_euLdMDxH7?updatedAt=1759764432032"} alt={selectedChat.user.name} width={40} height={40} className='rounded-full border w-[40px] object-cover border-gray-600' />
+            <Image src={selectedChat?.user?.avatar[0].url || "https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740"} alt={selectedChat.user.name} width={40} height={40} className='rounded-full border w-[40px] object-cover border-gray-600' />
             <div>
             <h2 className='text-white font-semibold text-base' >{selectedChat?.user?.name}</h2>
             <p className='text-xs text-white' >{selectedChat.user?.isOnline?"online":"offline"}</p>

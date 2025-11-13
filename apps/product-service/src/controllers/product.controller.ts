@@ -1424,6 +1424,41 @@ export const createShopReview = async (req:any, res:Response,next:NextFunction)=
  
  
  }
+
+ export const addUniqueShopVisitors = async (req:any, res:Response,next:NextFunction)=>{
+
+  try {
+    
+    const {userId,shopId}= req.body;
+     if(!userId || !shopId){
+      return next(new ValidationError('userId and shopId is required'));
+     }     
+    await prisma.uniqueShopVisitors.upsert({
+      where: {
+        shopId_userId: {
+          shopId: shopId,
+          userId: userId,
+        },
+      },
+      create:{
+        shopId,
+        userId,
+        visitCount:1
+      },
+      update:{
+        visitCount:{increment:1}
+      }
+    })
+    return res.status(201).json({success:true,message:'Visit Count updated'});
+ 
+  } catch (error) {
+   
+   console.log(error);
+   return  next(error);
+  }
+ 
+ 
+ }
  
  
  

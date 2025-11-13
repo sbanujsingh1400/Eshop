@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useMutation } from '@tanstack/react-query';
 //@ts-ignore
 import axios,{ AxiosError }  from 'axios';
+import { Eye, EyeOff } from 'lucide-react';
 
 
 type FormData = {
@@ -80,13 +81,15 @@ const page = () => {
      const requestOtpMutation = useMutation({
         mutationFn:async({email}:{email:string})=>{
             const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/forgot-password-user`,{email});
-           return response.data;
+              
+            return response.data;
         },
         onSuccess:(_,{email})=>{
             setUserEmail(email);
             setStep('otp');
             setCanResend(false);
             startResetTimer();
+            
         },
         onError:(error:AxiosError)=>{
             const errorMessage = (error?.response?.data as { message?:string})?.message || "Invalid OTP. Try again!"
@@ -101,7 +104,8 @@ const page = () => {
 
             if(!userEmail)return;
             const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/verify-forgot-password-user`,{email:userEmail,otp:otp.join('')});
-           return response.data;
+             console.log(response.data);
+            return response.data;
         },
         onSuccess:()=>{
             
@@ -128,9 +132,11 @@ const page = () => {
         mutationFn:async({password}:{password:string})=>{
 
             if(!password)return;
-            // console.log(password,userEmail)
+            console.log(password,userEmail)
             const response = await axios.post(`${process.env.NODE_ENV=='production'?process.env.NEXT_PUBLIC_SERVER_URI:process.env.NEXT_PUBLIC_SERVER_URI_LOCAL}/reset-password-user`,{email:userEmail,newPassword:password},{withCredentials:true});
-           return response.data;
+             console.log(password)
+             
+            return response.data;
         },
         onSuccess:(_,{password})=>{
             
@@ -145,6 +151,7 @@ const page = () => {
         onError:(error:AxiosError)=>{
             const errorMessage = (error?.response?.data as { message?:string})?.message || "Invalid OTP. Try again!"
            setServerError(errorMessage)
+           toast.error(errorMessage);
         }
      })
 
@@ -228,16 +235,34 @@ const page = () => {
     {step ==='reset' && (<><h3 className='text-xl font-semibold text-center mb-4' >Reset Password</h3>
     
        <form onSubmit={handleSubmit(onSubmitPassword)}>
-       <label className='block  text-gray-700 '>New Password</label>
+       {/* <label className='block  text-gray-700 '>New Password</label>
        <input type={passwordVisible?"text":"password"} placeholder='Min 6 characters' className='w-full p-2 border border-gray-300 outline-0 !rounded mb-1' {...register("password",{
      required:"Password is required",
      minLength:{
          value:6,
          message:"Password must be at least 6 charsacters"
      }
- })}/>
+ })}/> */}
+  <div>
+              <label className='block text-sm font-semibold text-slate-700 mb-1'>New Password</label>
+              <div className="relative">
+                <input type={passwordVisible?"text":"password"} placeholder='Min 6 characters' className='w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition' {...register("password",{
+                    required:"Password is required",
+                    minLength:{
+                        value:6,
+                        message:"Password must be at least 6 characters"
+                    }
+                })}/>
+
+                <button type='button' onClick={()=>setPasswordVisible(!passwordVisible)} className='absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors' >
+                    {passwordVisible?<Eye size={20} />:<EyeOff size={20} />}
+                </button>
+              </div>
+              </div>
+ 
+ 
  {errors.password && <p className='text-red-500 text-sm' > {String(errors.password.message)} </p>}
- <button type='submit' className='w-full mt-4 text-lg cursor-pointer bg-blue-500 text-white py-2 rounded-lg '  disabled={resetPasswordMutation.isPending}  >{resetPasswordMutation.isPending?"Submitting ...":"Submit"}</button>
+ <button type='submit' className='w-full mt-4 text-lg cursor-pointer bg-blue-500 text-white py-2 rounded-lg '  disabled={resetPasswordMutation.isPending}  >{resetPasswordMutation.isPending?"Submitting ...":"Reset Password"}</button>
        </form>
     </>)}
         </div>

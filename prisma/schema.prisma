@@ -303,7 +303,7 @@ model products {
   stock                 Int // Number of items in stock
   sale_price            Float // Sale price
   regular_price         Float // Regular price
-  ratings               Float             @default(5) // Default rating of 5
+  ratings               Float             @default(0) // Default rating of 5
   warranty              String? // Optional warranty information
   custom_specifications Json? // Optional JSON for custom specifications
   custom_properties     Json // JSON for custom properties
@@ -440,6 +440,7 @@ model uniqueShopVisitors {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   shopId    String   @db.ObjectId
   userId    String   @db.ObjectId
+  visitCount BigInt   @default(0) 
   visitedAt DateTime @default(now())
 
   @@unique([shopId, userId])

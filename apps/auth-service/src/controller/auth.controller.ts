@@ -287,8 +287,14 @@ export const resetUserPassword = async (
     const user = await prisma.users.findUnique({ where: { email } });
 
     if (!user) return next(new NotFoundError("User not found"));
+    let isSamePassword 
+    if(!user.password && user.googleId){
+      isSamePassword=false;
 
-    const isSamePassword = await bcrypt.compare(newPassword, user.password!);
+    }else {
+      isSamePassword = await bcrypt.compare(newPassword, user.password!);
+    } 
+    
     if (isSamePassword)
       return next(
         new ValidationError(" newPassword cannot be same as the old password!")

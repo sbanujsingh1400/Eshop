@@ -66,8 +66,8 @@ const SellerHomePage = () => {
    
       const queryClient=useQueryClient(); 
     const {seller,isLoading} = useSeller();
-    const [profilePic,setProfilePic]= useState<string>((seller?.avatar && seller?.avatar[0]?.url) || 'https://ik.imagekit.io/sbanujsingh/products/product-1759752532938_5xZEInFAX?updatedAt=1759752534342' )
-    const [coverBanner,setCoverBanner]= useState<string>((seller?.shop &&seller?.shop?.coverBanner) || 'https://ik.imagekit.io/sbanujsingh/products/product-1759752532938_5xZEInFAX?updatedAt=1759752534342' )
+    const [profilePic,setProfilePic]= useState<string>((seller?.avatar && seller?.avatar[0]?.url) || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740' )
+    const [coverBanner,setCoverBanner]= useState<string>((seller?.shop &&seller?.shop?.coverBanner) || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740' )
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
     // console.log(seller)

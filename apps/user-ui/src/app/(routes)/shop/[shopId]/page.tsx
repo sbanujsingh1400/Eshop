@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     Star,
     MapPin,
@@ -107,13 +107,17 @@ const ShopHeader = ({ name, ratings, reviewCount, coverBanner, avatarUrl,handleC
     avatarUrl: string
     handleChat:()=>any
 }) =>{ 
+  
     
+
+
+
    return  (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
         {/* Cover Banner */}
         <div className="h-48 md:h-64 bg-gray-200">
             <img
-                src={coverBanner}
+                src={coverBanner || 'https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740'}
                 alt={`${name} cover`}
                 className="w-full h-full object-cover"
                 onError={(e) => (e.currentTarget.src = 'https://placehold.co/1200x300/E2E8F0/AAAAAA?text=Banner+Not+Found')}
@@ -355,6 +359,15 @@ export default function UserShopPage() {
         queryKey: ['shopDetails', shopId], // React Query key
         queryFn: () => fetchShopDetails(shopId), // The API function to call
     });
+
+    useEffect(()=>{
+
+        if(!isLoading&&!isError){
+          const res:any = axiosInstance.post('/product/addUniqueShopVisitors',{userId:user.id,shopId:shopId})
+          
+        }
+   
+            },[user,isLoading,isError,shopId])
     
     // --- Loading State ---
     if (isLoading) {
@@ -432,6 +445,8 @@ export default function UserShopPage() {
         
          }
     
+
+     
     // --- Success State (Data is loaded) ---
     // We can safely assume shopData exists here
     return (
