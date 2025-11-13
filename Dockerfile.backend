@@ -8,7 +8,7 @@ ENV APP_NAME=${APP_NAME}
 WORKDIR /app
 
 COPY . .
-
+RUN npx prisma generate --schema=prisma/schema.prisma
 RUN npx nx build ${APP_NAME} 
 
 
