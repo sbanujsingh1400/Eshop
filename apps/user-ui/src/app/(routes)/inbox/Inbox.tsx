@@ -229,7 +229,7 @@ if (isUserLoading) {
     <div className='w-full bg-white' >
         <div className="max-w-7xl mx-auto py-8 ">
 
-  <div className='flex h-[calc(100vh-35rem)] border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden' >
+  <div className='flex h-[calc(100vh-12rem)] border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden' >
 
     <div className='w-full max-w-xs border-r border-slate-200 bg-slate-50 flex flex-col' >
         <div className='p-4 border-b border-slate-200 text-lg font-bold text-slate-800 flex-shrink-0' >
