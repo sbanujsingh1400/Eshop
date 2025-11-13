@@ -301,7 +301,7 @@ jobs:
           script: |
             cd ~/Eshop
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-            git pull
+            git pull origin master --rebase
             
             echo "Creating production .env file..."
             echo "${{ secrets.PROD_ENV_FILE }}" > .env
