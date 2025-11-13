@@ -16,5 +16,5 @@ COPY prisma ./prisma
 
 # Pre-generate Prisma client (common for all services)
 RUN npx prisma generate --schema=prisma/schema.prisma
-
+# 
 # This base image now contains all dependencies
