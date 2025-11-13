@@ -224,7 +224,7 @@ if (isUserLoading) {
   );
 }
 
-
+// console.log('')
   return (
     <div className='w-full bg-white' >
         <div className="max-w-7xl mx-auto py-8 ">
