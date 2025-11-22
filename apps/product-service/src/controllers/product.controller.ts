@@ -884,7 +884,7 @@ export const fetchHeroSectionDetails = async ( req: Request,
   
 try {
   
-  const products= await prisma.products.findMany({take:5,select:{regular_price:true,images:true,title:true,short_description:true,sale_price:true}});
+  const products= await prisma.products.findMany({take:5,select:{regular_price:true,images:true,title:true,short_description:true,sale_price:true},orderBy:{createdAt:"desc"}});
      
   return res.status(200).json({success:true,products});
 
