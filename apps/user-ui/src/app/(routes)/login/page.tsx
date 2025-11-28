@@ -31,7 +31,10 @@ const page = () => {
         register,
         handleSubmit,
         formState:{errors},
-     } = useForm<FormData>();
+     } = useForm<FormData>({defaultValues: {
+        email: "sbanujsingh@gmail.com",
+        password: "Anuj@123",
+      }});
 
      const loginMutation = useMutation<any, AxiosError, FormData>({
         mutationFn:async(formData:FormData)=>{

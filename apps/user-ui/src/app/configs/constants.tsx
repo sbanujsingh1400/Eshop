@@ -12,7 +12,7 @@ href:'/shops'
 // href:'/offers'
 // },
 {title:"Become A Seller",
-href:  `https://eshop.seller.mypersonalproject.site/signup`
+href:  `https://eshop.seller.mypersonalproject.site/login`
 }
 
 ]
