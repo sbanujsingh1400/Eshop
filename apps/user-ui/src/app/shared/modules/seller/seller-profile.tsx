@@ -136,7 +136,7 @@ const SellerProfile = ({ shop, followersCount }: SellerProfileProps) => {
                   shop?.avatar ||
                   "https://ik.imagekit.io/sbanujsingh/static_images/backupImage.jpeg?updatedAt=1763010683740"
                 }
-                alt="Seller Avatar"
+                alt="Seller Avatar "
                 layout="fill"
                 objectFit="cover"
                 className="rounded-full"
