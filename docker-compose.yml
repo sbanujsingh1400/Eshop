@@ -5,7 +5,20 @@ networks:
     driver: bridge
 
 services:
-  
+  redis-server:
+    container_name: e-shop-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+     - "6379:6379"
+    networks:
+     - e-shop-network
+    healthcheck:
+      test: ["CMD","redis-cli","ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5 
+
   user-ui:
     container_name: e-shop-user-ui
     image: ghcr.io/sbanujsingh1400/eshop-user-ui:latest
